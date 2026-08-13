@@ -23,7 +23,11 @@ public class ProductoService {
         // select * from productos
         return productoRepository.findAll();
     }
-
-
+    public Producto getProductoById(Long id) {
+        return productoRepository.findById(id).orElse(null);
+    }
+    public Producto crearProducto(Producto producto) {
+        return productoRepository.save(producto);
+}
     
 }

@@ -11,6 +11,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 
 
@@ -35,8 +37,12 @@ public class ProductoController {
     // get http://localhost:8080/api/productos/1
     @GetMapping("/{id}")
     public Producto getProductoById(@PathVariable Long id) {
-        return null;
+        return productoService.getProductoById(id);
     }
     
-    
+    // post http://localhost:8080/api/productos
+    @PostMapping()
+    public Producto crearProducto(@RequestBody Producto producto) {
+        return productoService.crearProducto(producto);
+    }
 }
