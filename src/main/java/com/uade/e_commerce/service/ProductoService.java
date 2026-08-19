@@ -1,13 +1,10 @@
 package com.uade.e_commerce.service;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
 import com.uade.e_commerce.model.Producto;
 import com.uade.e_commerce.repository.ProductoRepository;
-
 import jakarta.transaction.Transactional;
+import java.util.List;
+import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
@@ -28,6 +25,6 @@ public class ProductoService {
     }
     public Producto crearProducto(Producto producto) {
         return productoRepository.save(producto);
-}
-    
+    }
+
 }
