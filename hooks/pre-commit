@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+
+echo "Running Spotless formatting..."
+./mvnw spotless:apply -q
+echo "Formatting complete."

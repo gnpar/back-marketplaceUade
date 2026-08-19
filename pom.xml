@@ -143,9 +143,11 @@
 			<plugin>
 				<groupId>com.rudikershaw.gitbuildhook</groupId>
 				<artifactId>git-build-hook-maven-plugin</artifactId>
-				<version>3.4.1</version>
+				<version>3.6.0</version>
 				<configuration>
-					<preCommit>./mvnw spotless:apply -q</preCommit>
+					<installHooks>
+						<pre-commit>hooks/pre-commit</pre-commit>
+					</installHooks>
 				</configuration>
 				<executions>
 					<execution>

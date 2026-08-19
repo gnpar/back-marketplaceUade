@@ -17,7 +17,7 @@ No hay pipeline de CI/CD.
 
 ## Formatting y linting
 
-Se usa **Spotless** con Eclipse JDT Formatter (configurado en `eclipse-formatter.xml`). El hook de pre-commit se instala automáticamente en el primer `mvn compile`.
+Se usa **Spotless** con Eclipse JDT Formatter (configurado en `eclipse-formatter.xml`). El hook de pre-commit se instala automáticamente en el primer `mvn initialize` (o `mvn compile`).
 
 ```bash
 ./mvnw spotless:check   # Verificar formato (sin modificar archivos)
