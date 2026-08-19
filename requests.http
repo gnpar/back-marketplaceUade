@@ -1,0 +1,43 @@
+#
+# Archivo de referencia de solicitudes al servicio desarrollado.
+# Para pruebas rápidas
+#
+
+### Crear un producto
+
+POST http://localhost:8080/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Notebook Dell",
+  "descripcion": "Notebook Dell Inspiron 15 pulgadas",
+  "precio": 899999.99
+}
+
+### Obtener todos los productos
+
+GET http://localhost:8080/api/productos
+Accept: application/json
+
+### Obtener producto por ID
+
+GET http://localhost:8080/api/productos/1
+Accept: application/json
+
+### Obtener la lista de endpoints (Actuator)
+
+GET http://localhost:8080/actuator/mappings
+Accept: application/json
+
+> {%
+  const data = response.body;
+  const contexts = Object.keys(data.contexts || {});
+  for (const ctx of contexts) {
+    const dispatchers = data.contexts[ctx]?.mappings?.dispatcherServlets?.dispatcherServlet || [];
+    for (const d of dispatchers) {
+      if (d.predicate && !d.predicate.startsWith('/actuator')) {
+        client.log(`  ${d.predicate}  [${d.details?.requestMappingConditions?.methodsCondition?.value || '?'}]  →  ${d.handler}`);
+      }
+    }
+  }
+%}
