@@ -1,6 +1,7 @@
 package com.uade.e_commerce.service;
 
 import com.uade.e_commerce.dto.ProductoResponseDTO;
+import com.uade.e_commerce.dto.ProductoRequestDTO;
 import com.uade.e_commerce.model.Producto;
 import com.uade.e_commerce.repository.ProductoRepository;
 import jakarta.transaction.Transactional;
@@ -36,9 +37,16 @@ public class ProductoService {
         return convertirADTO(producto);
     }
 
-    public Producto crearProducto(Producto producto) {
-        return productoRepository.save(producto);
-    }
+    public ProductoResponseDTO crearProducto(ProductoRequestDTO productoDTO) {
+    Producto producto = new Producto();
+    producto.setNombre(productoDTO.getNombre());
+    producto.setDescripcion(productoDTO.getDescripcion());
+    producto.setPrecio(productoDTO.getPrecio());
+
+    Producto guardado = productoRepository.save(producto);
+
+    return convertirADTO(guardado);
+}
 
     private ProductoResponseDTO convertirADTO(Producto producto) {
         ProductoResponseDTO dto = new ProductoResponseDTO();

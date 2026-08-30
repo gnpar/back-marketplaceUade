@@ -1,6 +1,7 @@
 package com.uade.e_commerce.controller;
 
 import com.uade.e_commerce.dto.ProductoResponseDTO;
+import com.uade.e_commerce.dto.ProductoRequestDTO;
 import com.uade.e_commerce.model.Producto;
 import com.uade.e_commerce.service.ProductoService;
 import java.util.List;
@@ -36,7 +37,7 @@ public class ProductoController {
 
     // post http://localhost:8080/api/productos
     @PostMapping()
-    public Producto crearProducto(@RequestBody Producto producto) {
-        return productoService.crearProducto(producto);
+    public ProductoResponseDTO crearProducto(@RequestBody ProductoRequestDTO productoDTO) {
+    return productoService.crearProducto(productoDTO);
     }
 }
