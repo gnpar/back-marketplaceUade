@@ -19,5 +19,5 @@ public class Categoria {
     private Long id;
 
     private String nombre;
-    
+
 }

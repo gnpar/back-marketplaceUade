@@ -3,8 +3,12 @@ package com.uade.e_commerce.service;
 import com.uade.e_commerce.model.Producto;
 import com.uade.e_commerce.repository.ProductoRepository;
 import jakarta.transaction.Transactional;
+
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
+
+import com.uade.e_commerce.dto.ProductoResponseDTO;
 
 @Service
 @Transactional
@@ -16,15 +20,35 @@ public class ProductoService {
         this.productoRepository = productoRepository;
     }
 
-    public List<Producto> getAllProductos() {
-        // select * from productos
-        return productoRepository.findAll();
+    public List<ProductoResponseDTO> getAllProductos() {
+    // select * from productos
+    List<Producto> productos = productoRepository.findAll();
+    List<ProductoResponseDTO> dtos = new ArrayList<>();
+    for (Producto producto : productos) {
+        dtos.add(convertirADTO(producto));
     }
-    public Producto getProductoById(Long id) {
-        return productoRepository.findById(id).orElse(null);
+    return dtos;
     }
+
+    public ProductoResponseDTO getProductoById(Long id) {
+    Producto producto = productoRepository.findById(id).orElse(null);
+    if (producto == null) {
+        return null;
+    }
+    return convertirADTO(producto);
+    }
+
     public Producto crearProducto(Producto producto) {
         return productoRepository.save(producto);
     }
 
+    private ProductoResponseDTO convertirADTO(Producto producto) {
+    ProductoResponseDTO dto = new ProductoResponseDTO();
+    dto.setId(producto.getId());
+    dto.setNombre(producto.getNombre());
+    dto.setDescripcion(producto.getDescripcion());
+    dto.setPrecio(producto.getPrecio());
+    return dto;
+    }  
+        
 }
