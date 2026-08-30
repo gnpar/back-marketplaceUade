@@ -1,8 +1,7 @@
 package com.uade.e_commerce.controller;
 
-import com.uade.e_commerce.dto.ProductoResponseDTO;
 import com.uade.e_commerce.dto.ProductoRequestDTO;
-import com.uade.e_commerce.model.Producto;
+import com.uade.e_commerce.dto.ProductoResponseDTO;
 import com.uade.e_commerce.service.ProductoService;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +37,6 @@ public class ProductoController {
     // post http://localhost:8080/api/productos
     @PostMapping()
     public ProductoResponseDTO crearProducto(@RequestBody ProductoRequestDTO productoDTO) {
-    return productoService.crearProducto(productoDTO);
+        return productoService.crearProducto(productoDTO);
     }
 }
