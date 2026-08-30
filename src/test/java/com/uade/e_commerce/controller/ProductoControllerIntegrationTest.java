@@ -44,7 +44,7 @@ class ProductoControllerIntegrationTest {
 
     @Test
     void listarProductosDespuesDeCrearUno() throws Exception {
-        Producto producto = new Producto(null, "Teclado", "Teclado mecánico RGB", 45000.00);
+        Producto producto = new Producto(null, "Teclado", "Teclado mecánico RGB", 45000.00, null, null);
         productoRepository.save(producto);
 
         mockMvc.perform(get("/api/productos").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
@@ -54,7 +54,7 @@ class ProductoControllerIntegrationTest {
 
     @Test
     void obtenerProductoPorIdExistente() throws Exception {
-        Producto producto = new Producto(null, "Monitor", "Monitor 27 pulgadas", 350000.00);
+        Producto producto = new Producto(null, "Monitor", "Monitor 27 pulgadas", 350000.00, null, null);
         Producto guardado = productoRepository.save(producto);
 
         mockMvc.perform(get("/api/productos/{id}", guardado.getId()).accept(MediaType.APPLICATION_JSON))
