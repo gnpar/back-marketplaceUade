@@ -11,6 +11,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.JoinTable;
+import java.util.List;
+import java.util.ArrayList;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,5 +34,13 @@ public class Producto {
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
+    
+    @ManyToMany
+    @JoinTable(
+    name = "producto_categoria",
+    joinColumns = @JoinColumn(name = "producto_id"),
+    inverseJoinColumns = @JoinColumn(name = "categoria_id")
+    )
+    private List<Categoria> categorias = new ArrayList<>();
 
 }
