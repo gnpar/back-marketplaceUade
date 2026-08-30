@@ -9,6 +9,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,5 +26,9 @@ public class Producto {
     private String nombre;
     private String descripcion;
     private Double precio;
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario;
 
 }
