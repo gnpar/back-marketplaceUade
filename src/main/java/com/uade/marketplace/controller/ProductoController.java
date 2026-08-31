@@ -4,9 +4,12 @@ import com.uade.marketplace.dto.ProductoRequestDTO;
 import com.uade.marketplace.dto.ProductoResponseDTO;
 import com.uade.marketplace.service.ProductoService;
 import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,5 +41,26 @@ public class ProductoController {
     @PostMapping()
     public ProductoResponseDTO crearProducto(@RequestBody ProductoRequestDTO productoDTO) {
         return productoService.crearProducto(productoDTO);
+    }
+
+    // put http://localhost:8080/api/productos/1
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductoResponseDTO> actualizarProducto(@PathVariable Long id,
+            @RequestBody ProductoRequestDTO productoDTO) {
+        ProductoResponseDTO actualizado = productoService.actualizarProducto(id, productoDTO);
+        if (actualizado == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(actualizado);
+    }
+
+    // delete http://localhost:8080/api/productos/1
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id) {
+        boolean eliminado = productoService.eliminarProducto(id);
+        if (!eliminado) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.noContent().build();
     }
 }
