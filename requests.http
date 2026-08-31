@@ -24,6 +24,21 @@ Accept: application/json
 GET http://localhost:8080/api/productos/1
 Accept: application/json
 
+### Actualizar un producto
+
+PUT http://localhost:8080/api/productos/1
+Content-Type: application/json
+
+{
+  "nombre": "Notebook Dell XPS",
+  "descripcion": "Notebook Dell XPS 13 pulgadas",
+  "precio": 1099999.99
+}
+
+### Eliminar un producto
+
+DELETE http://localhost:8080/api/productos/1
+
 ### Obtener la lista de endpoints (Actuator)
 
 GET http://localhost:8080/actuator/mappings

@@ -48,6 +48,28 @@ public class ProductoService {
         return convertirADTO(guardado);
     }
 
+    public ProductoResponseDTO actualizarProducto(Long id, ProductoRequestDTO productoDTO) {
+        Producto producto = productoRepository.findById(id).orElse(null);
+        if (producto == null) {
+            return null;
+        }
+        producto.setNombre(productoDTO.getNombre());
+        producto.setDescripcion(productoDTO.getDescripcion());
+        producto.setPrecio(productoDTO.getPrecio());
+
+        Producto guardado = productoRepository.save(producto);
+
+        return convertirADTO(guardado);
+    }
+
+    public boolean eliminarProducto(Long id) {
+        if (!productoRepository.existsById(id)) {
+            return false;
+        }
+        productoRepository.deleteById(id);
+        return true;
+    }
+
     private ProductoResponseDTO convertirADTO(Producto producto) {
         ProductoResponseDTO dto = new ProductoResponseDTO();
         dto.setId(producto.getId());

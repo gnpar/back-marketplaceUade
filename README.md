@@ -105,3 +105,5 @@ Base: `http://localhost:8080/api/productos`
 | GET | `/api/productos` | Listar todos los productos |
 | GET | `/api/productos/{id}` | Obtener producto por ID |
 | POST | `/api/productos` | Crear producto |
+| PUT | `/api/productos/{id}` | Actualizar producto (404 si no existe) |
+| DELETE | `/api/productos/{id}` | Eliminar producto (204 si se elimina, 404 si no existe) |

@@ -53,19 +53,9 @@ El nombre del paquete es `com.uade.marketplace`.
 
 Se usa Lombok (`@Data`, `@NoArgsConstructor`, `@AllArgsConstructor`). El procesamiento de anotaciones está configurado tanto en Maven como en Eclipse.
 
-## API
-
-Ruta base: `http://localhost:8080/api/productos`
-
-- `GET /api/productos` — listar todos
-- `GET /api/productos/{id}` — obtener por ID
-- `POST /api/productos` — crear
-
-Nota: `requests.http` usa `/api/users` que está desactualizado — el endpoint real es `/api/productos`.
-
 ## Testing
 
-Un solo smoke test en `src/test/java/com/uade/marketplace/MarketplaceUadeApplicationTests.java` (`contextLoads()`). Usa Spring Boot Test con JUnit 5.
+Smoke test (`MarketplaceUadeApplicationTests`) y tests de integración de la API (`controller/ProductoControllerIntegrationTest`). Usan Spring Boot Test con JUnit 5 y H2.
 
 Ejecutar tests: `./mvnw test`
 
