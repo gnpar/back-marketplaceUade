@@ -1,6 +1,6 @@
-package com.uade.e_commerce.repository;
+package com.uade.marketplace.repository;
 
-import com.uade.e_commerce.model.Producto;
+import com.uade.marketplace.model.Producto;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**

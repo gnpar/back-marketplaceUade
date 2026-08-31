@@ -1,12 +1,12 @@
-package com.uade.e_commerce.controller;
+package com.uade.marketplace.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.uade.e_commerce.model.Producto;
-import com.uade.e_commerce.repository.ProductoRepository;
+import com.uade.marketplace.model.Producto;
+import com.uade.marketplace.repository.ProductoRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

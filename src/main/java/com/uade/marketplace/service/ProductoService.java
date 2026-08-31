@@ -1,9 +1,9 @@
-package com.uade.e_commerce.service;
+package com.uade.marketplace.service;
 
-import com.uade.e_commerce.dto.ProductoRequestDTO;
-import com.uade.e_commerce.dto.ProductoResponseDTO;
-import com.uade.e_commerce.model.Producto;
-import com.uade.e_commerce.repository.ProductoRepository;
+import com.uade.marketplace.dto.ProductoRequestDTO;
+import com.uade.marketplace.dto.ProductoResponseDTO;
+import com.uade.marketplace.model.Producto;
+import com.uade.marketplace.repository.ProductoRepository;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;

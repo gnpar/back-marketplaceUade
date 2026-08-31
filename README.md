@@ -1,15 +1,15 @@
-# e-commerce UADE — Marketplace de productos usados
+# marketplaceUade — Marketplace de productos usados
 
-Marketplace de compra-venta de productos usados entre estudiantes de UADE (proyecto universitario, grupo 4). Cualquier usuario registrado puede publicar productos usados para vender y otros usuarios pueden comprarlos.
+Marketplace de compra-venta de productos usados entre estudiantes de UADE (proyecto universitario, Aplicaciones Interactivas, grupo 4 mie-noche online). Cualquier usuario registrado puede publicar productos usados para vender y otros usuarios pueden comprarlos.
 
-Al comprar se reduce el stock disponible; los productos sin stock se pausan: dejan de aparecer en los listados y no pueden comprarse. No existe carrito tradicional: el comprador inicia una compra y puede retomarla desde cualquier parte de la aplicación.
+Al comprar se reduce el stock disponible; los productos sin stock se pausan: dejan de aparecer en los listados y no pueden comprarse. Cuando un comprador inicia una compra, puede retomarla desde cualquier parte de la aplicación, similar al funcionamiento de un carrito en un sitio de ecommerce tradicional.
 
 ## Aspectos técnicos
 
 - **Backend**: Java 17, Spring Boot 4.1.0, Spring Data JPA/Hibernate, Lombok, Maven.
 - **Base de datos**: MySQL (relacional, conector incluido). Por defecto se usa H2 en memoria (dev, sin MySQL). Con MySQL se usa el perfil `mysql` (crea la BD y las tablas automáticamente).
 - **API**: REST. En una próxima etapa será consumida por un frontend en React.
-- **Arquitectura en capas** (`com.uade.e_commerce`):
+- **Arquitectura en capas** (`com.uade.marketplace`):
   - `controller` — `@RestController`
   - `service` — `@Service` + `@Transactional` (lógica de negocio)
   - `repository` — `@Repository` extendiendo `JpaRepository` (acceso a datos)

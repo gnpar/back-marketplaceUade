@@ -1,4 +1,4 @@
-package com.uade.e_commerce.model;
+package com.uade.marketplace.model;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

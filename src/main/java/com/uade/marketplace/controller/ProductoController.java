@@ -1,8 +1,8 @@
-package com.uade.e_commerce.controller;
+package com.uade.marketplace.controller;
 
-import com.uade.e_commerce.dto.ProductoRequestDTO;
-import com.uade.e_commerce.dto.ProductoResponseDTO;
-import com.uade.e_commerce.service.ProductoService;
+import com.uade.marketplace.dto.ProductoRequestDTO;
+import com.uade.marketplace.dto.ProductoResponseDTO;
+import com.uade.marketplace.service.ProductoService;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

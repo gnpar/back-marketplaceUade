@@ -1,10 +1,10 @@
-package com.uade.e_commerce;
+package com.uade.marketplace;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ECommerceApplicationTests {
+class MarketplaceUadeApplicationTests {
 
     @Test
     void contextLoads() {

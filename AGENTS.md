@@ -1,8 +1,8 @@
-# AGENTS.md — ecommerce-g4
+# AGENTS.md — marketplaceUade
 
 ## Qué es esto
 
-Proyecto e-commerce en Java 17 / Spring Boot 4.1.0 (proyecto universitario, UADE grupo 4). Proyecto Maven de módulo único, no es un monorepo.
+Proyecto e-commerce (marketplaceUade) en Java 17 / Spring Boot 4.1.0 (proyecto universitario, UADE grupo 4). Proyecto Maven de módulo único, no es un monorepo.
 
 ## Comandos rápidos
 
@@ -31,15 +31,15 @@ El formatter corre en la fase `verify` del build. Si el código no está formate
 Spring Boot en capas: `Controller -> Service -> Repository -> Entity`
 
 ```
-src/main/java/com/uade/e_commerce/
-├── ECommerceApplication.java          # Punto de entrada
+src/main/java/com/uade/marketplace/
+├── MarketplaceUadeApplication.java    # Punto de entrada
 ├── controller/ProductoController.java # API REST
 ├── service/ProductoService.java       # Lógica de negocio (@Transactional)
 ├── repository/ProductoRepository.java # Spring Data JPA
 └── model/Producto.java                # Entidad JPA
 ```
 
-El nombre del paquete usa guión bajo: `com.uade.e_commerce` (no `com.uade.e-commerce`).
+El nombre del paquete es `com.uade.marketplace`.
 
 ## Base de datos
 
@@ -65,7 +65,7 @@ Nota: `requests.http` usa `/api/users` que está desactualizado — el endpoint 
 
 ## Testing
 
-Un solo smoke test en `src/test/java/com/uade/e_commerce/ECommerceApplicationTests.java` (`contextLoads()`). Usa Spring Boot Test con JUnit 5.
+Un solo smoke test en `src/test/java/com/uade/marketplace/MarketplaceUadeApplicationTests.java` (`contextLoads()`). Usa Spring Boot Test con JUnit 5.
 
 Ejecutar tests: `./mvnw test`
 

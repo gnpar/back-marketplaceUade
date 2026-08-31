@@ -1,13 +1,13 @@
-package com.uade.e_commerce;
+package com.uade.marketplace;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ECommerceApplication {
+public class MarketplaceUadeApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ECommerceApplication.class, args);
+        SpringApplication.run(MarketplaceUadeApplication.class, args);
     }
 
 }
