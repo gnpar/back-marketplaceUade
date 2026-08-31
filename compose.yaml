@@ -1,0 +1,13 @@
+services:
+  db:
+    image: docker.io/mysql
+    restart: always
+    env_file: .env.dev
+    ports:
+      - "3306:3306"
+
+  adminer:
+    image: docker.io/adminer
+    restart: always
+    ports:
+      - "30080:8080"

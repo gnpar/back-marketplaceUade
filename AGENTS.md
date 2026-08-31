@@ -45,7 +45,9 @@ El nombre del paquete usa guión bajo: `com.uade.e_commerce` (no `com.uade.e-com
 
 - Por defecto: H2 en memoria (`jdbc:h2:mem:testdb`). Los datos se pierden al reiniciar.
 - Consola H2: `http://localhost:8080/h2-console`
-- El conector MySQL está en el classpath (runtime) pero no está configurado — listo para producción.
+- MySQL (perfil `mysql`): config en `application-mysql.properties`, que lee variables de `.env.dev` (gitignored) vía `spring.config.import`. `MYSQL_ROOT_PASSWORD` es obligatoria; `MYSQL_HOST`, `DB_NAME`, `DB_USER` tienen defaults (`localhost`, `marketplace`, `root`). `createDatabaseIfNotExist=true` crea la BD automáticamente.
+- `docker compose up -d` levanta MySQL (`3306`) y Adminer (`http://localhost:30080`). Particularidades locales del entorno se manejan en `compose.override.yaml` (gitignored, auto-fusionado).
+- Ejecutar la app con MySQL: `./mvnw spring-boot:run -Dspring-boot.run.profiles=mysql`
 
 ## Generación de código
 
@@ -70,5 +72,3 @@ Ejecutar tests: `./mvnw test`
 ## Cuidados
 
 - El proyecto apunta a Java 17, pero puede ejecutarse en versiones más nuevas (probado con Java 25).
-- El `launch.json` de VS Code referencia `${workspaceFolder}/.env` pero no hay archivo `.env` commiteado.
-- `.gitignore` lista `mvnw`/`mvnw.cmd` pero están tracked forzadamente en git — no eliminarlos.
