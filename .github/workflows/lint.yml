@@ -28,22 +28,19 @@ jobs:
           cache: maven
 
       - name: Spotless check
-        id: spotless
         run: |
           if ./mvnw --batch-mode --no-transfer-progress spotless:check; then
-            echo "result=clean" >> "$GITHUB_OUTPUT"
+            printf '✅ No hay problemas de formateo.\n' > "$RUNNER_TEMP/spotless.md"
           else
             ./mvnw --batch-mode --no-transfer-progress spotless:apply
-            echo "result=dirty" >> "$GITHUB_OUTPUT"
-            echo "diff<<'SPOTLESS_EOF'" >> "$GITHUB_OUTPUT"
-            git diff --no-color >> "$GITHUB_OUTPUT"
-            echo "SPOTLESS_EOF" >> "$GITHUB_OUTPUT"
+            printf '❌ Spotless detectó problemas de formateo. Ejecutá `./mvnw spotless:apply` localmente:\n\n' > "$RUNNER_TEMP/spotless.md"
+            printf '```diff\n' >> "$RUNNER_TEMP/spotless.md"
+            git diff --no-color >> "$RUNNER_TEMP/spotless.md"
+            printf '\n```\n' >> "$RUNNER_TEMP/spotless.md"
           fi
 
       - name: Publicar comentario en el PR
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: spotless
-          message: |
-            ${{ steps.spotless.outputs.result == 'dirty' && '❌ Spotless detectó problemas de formateo. Ejecutá `./mvnw spotless:apply` localmente:' || '✅ No hay problemas de formateo.' }}
-            ${{ steps.spotless.outputs.result == 'dirty' && format('```diff{0}```', steps.spotless.outputs.diff) || '' }}
+          path: ${{ runner.temp }}/spotless.md
