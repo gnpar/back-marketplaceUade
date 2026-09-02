@@ -39,8 +39,7 @@ public class UsuarioService {
     // Registro
     public UsuarioResponseDTO crearUsuario(UsuarioRequestDTO usuarioDTO) {
         if (usuarioRepository.existsByMail(usuarioDTO.getMail())) {
-            throw new IllegalArgumentException(
-                    "Ya existe un usuario con el mail: " + usuarioDTO.getMail());
+            throw new IllegalArgumentException("Ya existe un usuario con el mail: " + usuarioDTO.getMail());
         }
         if (usuarioRepository.existsByNombreUsuario(usuarioDTO.getNombreUsuario())) {
             throw new IllegalArgumentException(

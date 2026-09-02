@@ -37,8 +37,7 @@ public class CategoriaService {
 
     public CategoriaResponseDTO crearCategoria(CategoriaRequestDTO categoriaDTO) {
         if (categoriaRepository.existsByNombre(categoriaDTO.getNombre())) {
-            throw new IllegalArgumentException(
-                    "Ya existe una categoria con el nombre: " + categoriaDTO.getNombre());
+            throw new IllegalArgumentException("Ya existe una categoria con el nombre: " + categoriaDTO.getNombre());
         }
         Categoria categoria = new Categoria();
         categoria.setNombre(categoriaDTO.getNombre());
