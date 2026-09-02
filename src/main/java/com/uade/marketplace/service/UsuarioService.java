@@ -3,6 +3,7 @@ package com.uade.marketplace.service;
 import com.uade.marketplace.dto.LoginRequestDTO;
 import com.uade.marketplace.dto.UsuarioRequestDTO;
 import com.uade.marketplace.dto.UsuarioResponseDTO;
+import com.uade.marketplace.exception.UsuarioException;
 import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Transactional
 public class UsuarioService {
+
     private final UsuarioRepository usuarioRepository;
 
     public UsuarioService(UsuarioRepository usuarioRepository) {
@@ -29,21 +31,17 @@ public class UsuarioService {
     }
 
     public UsuarioResponseDTO getUsuarioById(Long id) {
-        Usuario usuario = usuarioRepository.findById(id).orElse(null);
-        if (usuario == null) {
-            return null;
-        }
+        Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> UsuarioException.noEncontrado(id));
         return convertirADTO(usuario);
     }
 
     // Registro
     public UsuarioResponseDTO crearUsuario(UsuarioRequestDTO usuarioDTO) {
         if (usuarioRepository.existsByMail(usuarioDTO.getMail())) {
-            throw new IllegalArgumentException("Ya existe un usuario con el mail: " + usuarioDTO.getMail());
+            throw UsuarioException.mailYaRegistrado(usuarioDTO.getMail());
         }
         if (usuarioRepository.existsByNombreUsuario(usuarioDTO.getNombreUsuario())) {
-            throw new IllegalArgumentException(
-                    "Ya existe un usuario con el nombre de usuario: " + usuarioDTO.getNombreUsuario());
+            throw UsuarioException.nombreUsuarioYaRegistrado(usuarioDTO.getNombreUsuario());
         }
         Usuario usuario = new Usuario();
         usuario.setNombreUsuario(usuarioDTO.getNombreUsuario());
@@ -59,7 +57,7 @@ public class UsuarioService {
     public UsuarioResponseDTO login(LoginRequestDTO loginDTO) {
         Usuario usuario = usuarioRepository.findByMail(loginDTO.getMail()).orElse(null);
         if (usuario == null || !usuario.getContrasena().equals(loginDTO.getContrasena())) {
-            throw new IllegalArgumentException("Mail o contraseña incorrectos");
+            throw UsuarioException.credencialesIncorrectas();
         }
         return convertirADTO(usuario);
     }

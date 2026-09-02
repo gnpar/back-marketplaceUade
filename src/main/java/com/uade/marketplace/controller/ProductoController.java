@@ -48,19 +48,13 @@ public class ProductoController {
     public ResponseEntity<ProductoResponseDTO> actualizarProducto(@PathVariable Long id,
             @RequestBody ProductoRequestDTO productoDTO) {
         ProductoResponseDTO actualizado = productoService.actualizarProducto(id, productoDTO);
-        if (actualizado == null) {
-            return ResponseEntity.notFound().build();
-        }
         return ResponseEntity.ok(actualizado);
     }
 
     // delete http://localhost:8080/api/productos/1
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarProducto(@PathVariable Long id) {
-        boolean eliminado = productoService.eliminarProducto(id);
-        if (!eliminado) {
-            return ResponseEntity.notFound().build();
-        }
+        productoService.eliminarProducto(id);
         return ResponseEntity.noContent().build();
     }
 }
