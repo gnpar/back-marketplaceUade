@@ -5,9 +5,11 @@ import com.uade.marketplace.dto.UsuarioRequestDTO;
 import com.uade.marketplace.dto.UsuarioResponseDTO;
 import com.uade.marketplace.service.UsuarioService;
 import java.util.List;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,5 +46,17 @@ public class UsuarioController {
     @PostMapping("/login")
     public UsuarioResponseDTO login(@RequestBody LoginRequestDTO loginDTO) {
         return usuarioService.login(loginDTO);
+    }
+
+    // put http://localhost:8080/api/usuarios/1
+    @PutMapping("/{id}")
+    public UsuarioResponseDTO actualizarUsuario(@PathVariable Long id, @RequestBody UsuarioRequestDTO usuarioDTO) {
+        return usuarioService.actualizarUsuario(id, usuarioDTO);
+    }
+
+    // delete http://localhost:8080/api/usuarios/1
+    @DeleteMapping("/{id}")
+    public void eliminarUsuario(@PathVariable Long id) {
+        usuarioService.eliminarUsuario(id);
     }
 }
