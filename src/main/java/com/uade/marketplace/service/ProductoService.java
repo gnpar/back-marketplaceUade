@@ -2,6 +2,7 @@ package com.uade.marketplace.service;
 
 import com.uade.marketplace.dto.ProductoRequestDTO;
 import com.uade.marketplace.dto.ProductoResponseDTO;
+import com.uade.marketplace.exception.ProductoException;
 import com.uade.marketplace.model.Producto;
 import com.uade.marketplace.repository.ProductoRepository;
 import jakarta.transaction.Transactional;
@@ -20,7 +21,6 @@ public class ProductoService {
     }
 
     public List<ProductoResponseDTO> getAllProductos() {
-        // select * from productos
         List<Producto> productos = productoRepository.findAll();
         List<ProductoResponseDTO> dtos = new ArrayList<>();
         for (Producto producto : productos) {
@@ -30,10 +30,8 @@ public class ProductoService {
     }
 
     public ProductoResponseDTO getProductoById(Long id) {
-        Producto producto = productoRepository.findById(id).orElse(null);
-        if (producto == null) {
-            return null;
-        }
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> ProductoException.noEncontrado(id));
         return convertirADTO(producto);
     }
 
@@ -49,10 +47,8 @@ public class ProductoService {
     }
 
     public ProductoResponseDTO actualizarProducto(Long id, ProductoRequestDTO productoDTO) {
-        Producto producto = productoRepository.findById(id).orElse(null);
-        if (producto == null) {
-            return null;
-        }
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> ProductoException.noEncontrado(id));
         producto.setNombre(productoDTO.getNombre());
         producto.setDescripcion(productoDTO.getDescripcion());
         producto.setPrecio(productoDTO.getPrecio());
@@ -62,12 +58,11 @@ public class ProductoService {
         return convertirADTO(guardado);
     }
 
-    public boolean eliminarProducto(Long id) {
+    public void eliminarProducto(Long id) {
         if (!productoRepository.existsById(id)) {
-            return false;
+            throw ProductoException.noEncontrado(id);
         }
         productoRepository.deleteById(id);
-        return true;
     }
 
     private ProductoResponseDTO convertirADTO(Producto producto) {
@@ -78,5 +73,4 @@ public class ProductoService {
         dto.setPrecio(producto.getPrecio());
         return dto;
     }
-
 }
