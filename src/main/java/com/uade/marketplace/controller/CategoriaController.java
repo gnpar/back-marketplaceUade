@@ -45,8 +45,8 @@ public class CategoriaController {
 
     // put http://localhost:8080/api/categorias/1
     @PutMapping("/{id}")
-    public ResponseEntity<CategoriaResponseDTO> actualizarCategoria(
-            @PathVariable Long id, @RequestBody CategoriaRequestDTO categoriaDTO) {
+    public ResponseEntity<CategoriaResponseDTO> actualizarCategoria(@PathVariable Long id,
+            @RequestBody CategoriaRequestDTO categoriaDTO) {
         CategoriaResponseDTO actualizada = categoriaService.actualizarCategoria(id, categoriaDTO);
         if (actualizada == null) {
             return ResponseEntity.notFound().build();
