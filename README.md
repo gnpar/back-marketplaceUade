@@ -7,7 +7,7 @@ Al comprar se reduce el stock disponible; los productos sin stock se pausan: dej
 ## Aspectos técnicos
 
 - **Backend**: Java 17, Spring Boot 4.1.0, Spring Data JPA/Hibernate, Lombok, Maven.
-- **Base de datos**: MySQL (relacional, conector incluido). Por defecto se usa H2 en memoria (dev, sin MySQL). Con MySQL se usa el perfil `mysql` (crea la BD y las tablas automáticamente).
+- **Base de datos**: MySQL (relacional, conector incluido). El perfil por defecto es `mysql` (`spring.profiles.default`): cualquier forma de iniciar la app (Maven, IDE, dashboard, jar) usa MySQL y crea la BD y las tablas automáticamente. Los tests corren sobre el perfil `h2` (H2 en memoria), activado explícitamente en el build.
 - **API**: REST. En una próxima etapa será consumida por un frontend en React.
 - **Arquitectura en capas** (`com.uade.marketplace`):
   - `controller` — `@RestController`
@@ -53,10 +53,16 @@ Levanta MySQL (`localhost:3306`) y Adminer en `http://localhost:30080`.
 ### 3. Iniciar la aplicación
 
 ```bash
-./mvnw spring-boot:run -Dspring-boot.run.profiles=mysql
+./mvnw spring-boot:run
 ```
 
-Inicia la app en `http://localhost:8080` y crea la BD y las tablas automáticamente.
+Inicia la app en `http://localhost:8080` con MySQL y crea la BD y las tablas automáticamente.
+
+Para correr sin MySQL (H2 en memoria):
+
+```bash
+./mvnw spring-boot:run -Dapp.profiles=h2
+```
 
 ### 4. Ejecutar los tests
 
@@ -64,7 +70,7 @@ Inicia la app en `http://localhost:8080` y crea la BD y las tablas automáticame
 ./mvnw test
 ```
 
-Los tests usan H2, no requieren MySQL.
+Los tests corren sobre H2 (perfil `h2`, activado por el build), no requieren MySQL.
 
 ### Formateo
 
