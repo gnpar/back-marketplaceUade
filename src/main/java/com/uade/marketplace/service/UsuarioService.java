@@ -65,6 +65,45 @@ public class UsuarioService {
         return convertirADTO(usuario);
     }
 
+        public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO usuarioDTO) {
+        Usuario usuario = usuarioRepository.findById(id).orElse(null);
+        if (usuario == null) {
+            throw new IllegalArgumentException("No existe un usuario con el id: " + id);
+        }
+
+        // Solo valido unicidad si el campo efectivamente cambió
+        if (!usuario.getMail().equals(usuarioDTO.getMail())
+                && usuarioRepository.existsByMail(usuarioDTO.getMail())) {
+            throw new IllegalArgumentException(
+                    "Ya existe un usuario con el mail: " + usuarioDTO.getMail());
+        }
+        if (!usuario.getNombreUsuario().equals(usuarioDTO.getNombreUsuario())
+                && usuarioRepository.existsByNombreUsuario(usuarioDTO.getNombreUsuario())) {
+            throw new IllegalArgumentException(
+                    "Ya existe un usuario con el nombre de usuario: " + usuarioDTO.getNombreUsuario());
+        }
+
+        usuario.setNombreUsuario(usuarioDTO.getNombreUsuario());
+        usuario.setMail(usuarioDTO.getMail());
+        usuario.setNombre(usuarioDTO.getNombre());
+        usuario.setApellido(usuarioDTO.getApellido());
+
+        // Si no mandan contraseña, conservo la actual
+        if (usuarioDTO.getContrasena() != null && !usuarioDTO.getContrasena().isBlank()) {
+            usuario.setContrasena(usuarioDTO.getContrasena());
+        }
+
+        Usuario actualizado = usuarioRepository.save(usuario);
+        return convertirADTO(actualizado);
+    }
+
+    public void eliminarUsuario(Long id) {
+        if (!usuarioRepository.existsById(id)) {
+            throw new IllegalArgumentException("No existe un usuario con el id: " + id);
+        }
+        usuarioRepository.deleteById(id);
+    }
+
     private UsuarioResponseDTO convertirADTO(Usuario usuario) {
         UsuarioResponseDTO dto = new UsuarioResponseDTO();
         dto.setId(usuario.getId());
