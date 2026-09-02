@@ -42,8 +42,7 @@ public class CategoriaService {
 
     public CategoriaResponseDTO crearCategoria(CategoriaRequestDTO categoriaDTO) {
         if (categoriaRepository.existsByNombre(categoriaDTO.getNombre())) {
-            throw new IllegalArgumentException(
-                    "Ya existe una categoria con el nombre: " + categoriaDTO.getNombre());
+            throw new IllegalArgumentException("Ya existe una categoria con el nombre: " + categoriaDTO.getNombre());
         }
 
         Categoria categoria = new Categoria();
@@ -54,8 +53,7 @@ public class CategoriaService {
         return convertirADTO(guardada);
     }
 
-    public CategoriaResponseDTO actualizarCategoria(
-            Long id, CategoriaRequestDTO categoriaDTO) {
+    public CategoriaResponseDTO actualizarCategoria(Long id, CategoriaRequestDTO categoriaDTO) {
 
         Categoria categoria = categoriaRepository.findById(id).orElse(null);
 

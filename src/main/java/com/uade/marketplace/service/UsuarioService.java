@@ -64,17 +64,15 @@ public class UsuarioService {
         return convertirADTO(usuario);
     }
 
-        public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO usuarioDTO) {
+    public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO usuarioDTO) {
         Usuario usuario = usuarioRepository.findById(id).orElse(null);
         if (usuario == null) {
             throw new IllegalArgumentException("No existe un usuario con el id: " + id);
         }
 
         // Solo valido unicidad si el campo efectivamente cambió
-        if (!usuario.getMail().equals(usuarioDTO.getMail())
-                && usuarioRepository.existsByMail(usuarioDTO.getMail())) {
-            throw new IllegalArgumentException(
-                    "Ya existe un usuario con el mail: " + usuarioDTO.getMail());
+        if (!usuario.getMail().equals(usuarioDTO.getMail()) && usuarioRepository.existsByMail(usuarioDTO.getMail())) {
+            throw new IllegalArgumentException("Ya existe un usuario con el mail: " + usuarioDTO.getMail());
         }
         if (!usuario.getNombreUsuario().equals(usuarioDTO.getNombreUsuario())
                 && usuarioRepository.existsByNombreUsuario(usuarioDTO.getNombreUsuario())) {
