@@ -67,7 +67,8 @@ class ProductoControllerIntegrationTest {
 
     @Test
     void obtenerProductoPorIdInexistente() throws Exception {
-        mockMvc.perform(get("/api/productos/{id}", 999L).accept(MediaType.APPLICATION_JSON)).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/productos/{id}", 999L).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test

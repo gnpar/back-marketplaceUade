@@ -31,8 +31,7 @@ public class UsuarioService {
     }
 
     public UsuarioResponseDTO getUsuarioById(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> UsuarioException.noEncontrado(id));
+        Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> UsuarioException.noEncontrado(id));
         return convertirADTO(usuario);
     }
 

@@ -26,8 +26,8 @@ public class GlobalExceptionHandler {
     // Catch-all: cualquier otra excepción no contemplada
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGenericException(Exception ex) {
-        ErrorResponseDTO error = new ErrorResponseDTO(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error interno: " + ex.getMessage());
+        ErrorResponseDTO error = new ErrorResponseDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Error interno: " + ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }

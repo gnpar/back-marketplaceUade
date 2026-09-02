@@ -30,8 +30,7 @@ public class ProductoService {
     }
 
     public ProductoResponseDTO getProductoById(Long id) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> ProductoException.noEncontrado(id));
+        Producto producto = productoRepository.findById(id).orElseThrow(() -> ProductoException.noEncontrado(id));
         return convertirADTO(producto);
     }
 
@@ -47,8 +46,7 @@ public class ProductoService {
     }
 
     public ProductoResponseDTO actualizarProducto(Long id, ProductoRequestDTO productoDTO) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> ProductoException.noEncontrado(id));
+        Producto producto = productoRepository.findById(id).orElseThrow(() -> ProductoException.noEncontrado(id));
         producto.setNombre(productoDTO.getNombre());
         producto.setDescripcion(productoDTO.getDescripcion());
         producto.setPrecio(productoDTO.getPrecio());

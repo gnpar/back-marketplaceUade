@@ -12,23 +12,20 @@ public class UsuarioException extends RuntimeException {
     }
 
     public static UsuarioException noEncontrado(Long id) {
-        return new UsuarioException(
-                "Usuario con ID " + id + " no encontrado", HttpStatus.NOT_FOUND);
+        return new UsuarioException("Usuario con ID " + id + " no encontrado", HttpStatus.NOT_FOUND);
     }
 
     public static UsuarioException mailYaRegistrado(String mail) {
-        return new UsuarioException(
-                "Ya existe un usuario con el mail: " + mail, HttpStatus.CONFLICT);
+        return new UsuarioException("Ya existe un usuario con el mail: " + mail, HttpStatus.CONFLICT);
     }
 
     public static UsuarioException nombreUsuarioYaRegistrado(String nombreUsuario) {
-        return new UsuarioException(
-                "Ya existe un usuario con el nombre de usuario: " + nombreUsuario, HttpStatus.CONFLICT);
+        return new UsuarioException("Ya existe un usuario con el nombre de usuario: " + nombreUsuario,
+                HttpStatus.CONFLICT);
     }
 
     public static UsuarioException credencialesIncorrectas() {
-        return new UsuarioException(
-                "Mail o contraseña incorrectos", HttpStatus.UNAUTHORIZED);
+        return new UsuarioException("Mail o contraseña incorrectos", HttpStatus.UNAUTHORIZED);
     }
 
     public HttpStatus getStatus() {

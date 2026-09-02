@@ -12,8 +12,7 @@ public class ProductoException extends RuntimeException {
     }
 
     public static ProductoException noEncontrado(Long id) {
-        return new ProductoException(
-                "Producto con ID " + id + " no encontrado", HttpStatus.NOT_FOUND);
+        return new ProductoException("Producto con ID " + id + " no encontrado", HttpStatus.NOT_FOUND);
     }
 
     public HttpStatus getStatus() {
