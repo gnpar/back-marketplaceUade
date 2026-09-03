@@ -43,11 +43,12 @@ El nombre del paquete es `com.uade.marketplace`.
 
 ## Base de datos
 
-- Por defecto: H2 en memoria (`jdbc:h2:mem:testdb`). Los datos se pierden al reiniciar.
-- Consola H2: `http://localhost:8080/h2-console`
-- MySQL (perfil `mysql`): config en `application-mysql.properties`, que lee variables de `.env.dev` (gitignored) vía `spring.config.import`. `MYSQL_ROOT_PASSWORD` es obligatoria; `MYSQL_HOST`, `DB_NAME`, `DB_USER` tienen defaults (`localhost`, `marketplace`, `root`). `createDatabaseIfNotExist=true` crea la BD automáticamente.
+- Por defecto: MySQL (perfil `mysql` configurado como `spring.profiles.default` en `application.properties`). Vale para `./mvnw spring-boot:run`, IDE/dashboard y `java -jar`.
+- H2 en memoria (perfil `h2`): config en `application-h2.properties` (`jdbc:h2:mem:testdb`). Los datos se pierden al reiniciar. Consola H2: `http://localhost:8080/h2-console`.
+- Config MySQL en `application-mysql.properties`, que lee variables de `.env.dev` (gitignored) vía `spring.config.import`. `MYSQL_ROOT_PASSWORD` es obligatoria; `MYSQL_HOST`, `DB_NAME`, `DB_USER` tienen defaults (`localhost`, `marketplace`, `root`). `createDatabaseIfNotExist=true` crea la BD automáticamente.
 - `docker compose up -d` levanta MySQL (`3306`) y Adminer (`http://localhost:30080`). Particularidades locales del entorno se manejan en `compose.override.yaml` (gitignored, auto-fusionado).
-- Ejecutar la app con MySQL: `./mvnw spring-boot:run -Dspring-boot.run.profiles=mysql`
+- Los tests (`./mvnw test`) corren sobre H2: el plugin surefire activa explícitamente `spring.profiles.active=h2`.
+- Para correr sin MySQL (H2 en memoria): `./mvnw spring-boot:run -Dapp.profiles=h2`
 
 ## Generación de código
 
