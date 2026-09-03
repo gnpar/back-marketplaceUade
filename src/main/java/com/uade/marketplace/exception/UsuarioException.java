@@ -28,6 +28,10 @@ public class UsuarioException extends RuntimeException {
         return new UsuarioException("Mail o contraseña incorrectos", HttpStatus.UNAUTHORIZED);
     }
 
+    public static UsuarioException datosInvalidos(String mensaje) {
+        return new UsuarioException(mensaje, HttpStatus.BAD_REQUEST);
+    }
+
     public HttpStatus getStatus() {
         return status;
     }

@@ -63,19 +63,15 @@ public class UsuarioService {
     }
 
     public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO usuarioDTO) {
-        Usuario usuario = usuarioRepository.findById(id).orElse(null);
-        if (usuario == null) {
-            throw new IllegalArgumentException("No existe un usuario con el id: " + id);
-        }
+        Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> UsuarioException.noEncontrado(id));
 
         // Solo valido unicidad si el campo efectivamente cambió
         if (!usuario.getMail().equals(usuarioDTO.getMail()) && usuarioRepository.existsByMail(usuarioDTO.getMail())) {
-            throw new IllegalArgumentException("Ya existe un usuario con el mail: " + usuarioDTO.getMail());
+            throw UsuarioException.mailYaRegistrado(usuarioDTO.getMail());
         }
         if (!usuario.getNombreUsuario().equals(usuarioDTO.getNombreUsuario())
                 && usuarioRepository.existsByNombreUsuario(usuarioDTO.getNombreUsuario())) {
-            throw new IllegalArgumentException(
-                    "Ya existe un usuario con el nombre de usuario: " + usuarioDTO.getNombreUsuario());
+            throw UsuarioException.nombreUsuarioYaRegistrado(usuarioDTO.getNombreUsuario());
         }
 
         usuario.setNombreUsuario(usuarioDTO.getNombreUsuario());
@@ -94,7 +90,7 @@ public class UsuarioService {
 
     public void eliminarUsuario(Long id) {
         if (!usuarioRepository.existsById(id)) {
-            throw new IllegalArgumentException("No existe un usuario con el id: " + id);
+            throw UsuarioException.noEncontrado(id);
         }
         usuarioRepository.deleteById(id);
     }
