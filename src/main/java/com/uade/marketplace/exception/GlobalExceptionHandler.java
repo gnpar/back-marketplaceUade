@@ -23,6 +23,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getStatus()).body(error);
     }
 
+    // Excepciones de Carrito
+    @ExceptionHandler(CarritoException.class)
+    public ResponseEntity<ErrorResponseDTO> handleCarritoException(CarritoException ex) {
+        ErrorResponseDTO error = new ErrorResponseDTO(ex.getStatus().value(), ex.getMessage());
+        return ResponseEntity.status(ex.getStatus()).body(error);
+    }
+
     // Excepciones de validación estándar de Java (por si algún servicio la usa en
     // vez de una excepción propia)
     @ExceptionHandler(IllegalArgumentException.class)
