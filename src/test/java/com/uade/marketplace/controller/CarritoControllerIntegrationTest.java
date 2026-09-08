@@ -8,10 +8,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.uade.marketplace.model.Producto;
+import com.uade.marketplace.model.Sexo;
 import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.repository.CarritoItemRepository;
 import com.uade.marketplace.repository.ProductoRepository;
 import com.uade.marketplace.repository.UsuarioRepository;
+import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +46,8 @@ class CarritoControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        usuario = usuarioRepository.save(new Usuario(null, "juanperez", "juan@test.com", "clave123", "Juan", "Perez"));
+        usuario = usuarioRepository.save(new Usuario(null, "juanperez", "juan@test.com", "clave123", "Juan", "Perez",
+                LocalDate.of(2000, 1, 1), Sexo.MASCULINO));
         producto = productoRepository.save(new Producto(null, "Mouse", "Mouse inalámbrico", 15000.00, null, null));
     }
 
