@@ -23,6 +23,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getStatus()).body(error);
     }
 
+    // Excepciones de validación estándar de Java (por si algún servicio la usa en
+    // vez de una excepción propia)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponseDTO> handleIllegalArgument(IllegalArgumentException ex) {
+        ErrorResponseDTO error = new ErrorResponseDTO(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     // Catch-all: cualquier otra excepción no contemplada
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGenericException(Exception ex) {
