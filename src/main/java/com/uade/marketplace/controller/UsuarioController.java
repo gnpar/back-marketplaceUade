@@ -5,6 +5,8 @@ import com.uade.marketplace.dto.UsuarioRequestDTO;
 import com.uade.marketplace.dto.UsuarioResponseDTO;
 import com.uade.marketplace.service.UsuarioService;
 import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,8 +40,9 @@ public class UsuarioController {
 
     // post http://localhost:8080/api/usuarios/registro
     @PostMapping("/registro")
-    public UsuarioResponseDTO registrar(@RequestBody UsuarioRequestDTO usuarioDTO) {
-        return usuarioService.crearUsuario(usuarioDTO);
+    public ResponseEntity<UsuarioResponseDTO> registrar(@RequestBody UsuarioRequestDTO usuarioDTO) {
+        UsuarioResponseDTO creado = usuarioService.crearUsuario(usuarioDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     // post http://localhost:8080/api/usuarios/login
@@ -56,7 +59,8 @@ public class UsuarioController {
 
     // delete http://localhost:8080/api/usuarios/1
     @DeleteMapping("/{id}")
-    public void eliminarUsuario(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id) {
         usuarioService.eliminarUsuario(id);
+        return ResponseEntity.noContent().build();
     }
 }
