@@ -39,6 +39,7 @@ public class ProductoService {
         producto.setNombre(productoDTO.getNombre());
         producto.setDescripcion(productoDTO.getDescripcion());
         producto.setPrecio(productoDTO.getPrecio());
+        producto.setStock(productoDTO.getStock());
 
         Producto guardado = productoRepository.save(producto);
 
@@ -50,6 +51,7 @@ public class ProductoService {
         producto.setNombre(productoDTO.getNombre());
         producto.setDescripcion(productoDTO.getDescripcion());
         producto.setPrecio(productoDTO.getPrecio());
+        producto.setStock(productoDTO.getStock());
 
         Producto guardado = productoRepository.save(producto);
 
@@ -69,6 +71,7 @@ public class ProductoService {
         dto.setNombre(producto.getNombre());
         dto.setDescripcion(producto.getDescripcion());
         dto.setPrecio(producto.getPrecio());
+        dto.setStock(producto.getStock());
         return dto;
     }
 }

@@ -22,4 +22,9 @@ public class CarritoException extends RuntimeException {
     public HttpStatus getStatus() {
         return status;
     }
+
+    public static CarritoException carritoVacio(Long usuarioId) {
+        return new CarritoException("El carrito del usuario " + usuarioId + " está vacío", HttpStatus.BAD_REQUEST);
+    }
+
 }

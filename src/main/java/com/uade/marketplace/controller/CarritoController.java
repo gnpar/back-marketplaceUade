@@ -42,4 +42,11 @@ public class CarritoController {
         carritoService.quitarItem(id);
         return ResponseEntity.noContent().build();
     }
+
+    // post http://localhost:8080/api/carrito/1/checkout
+    @PostMapping("/{usuarioId}/checkout")
+    public ResponseEntity<Double> checkout(@PathVariable Long usuarioId) {
+        Double total = carritoService.checkout(usuarioId);
+        return ResponseEntity.ok(total);
+    }
 }

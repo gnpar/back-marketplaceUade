@@ -18,4 +18,8 @@ public class ProductoException extends RuntimeException {
     public HttpStatus getStatus() {
         return status;
     }
+
+    public static ProductoException sinStock(Long id) {
+        return new ProductoException("Producto con ID " + id + " no tiene stock suficiente", HttpStatus.BAD_REQUEST);
+    }
 }
