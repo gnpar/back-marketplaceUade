@@ -53,6 +53,12 @@ public class CarritoService {
 
         CarritoItem item = carritoItemRepository.findByUsuarioIdAndProductoId(usuario.getId(), producto.getId())
                 .orElse(null);
+
+        int cantidadTotal = cantidad + (item != null ? item.getCantidad() : 0);
+        if (producto.getStock() == null || producto.getStock() < cantidadTotal) {
+            throw ProductoException.sinStock(producto.getId());
+        }
+
         if (item == null) {
             item = new CarritoItem();
             item.setUsuario(usuario);
@@ -82,5 +88,34 @@ public class CarritoService {
         dto.setPrecio(item.getProducto().getPrecio());
         dto.setCantidad(item.getCantidad());
         return dto;
+    }
+
+    public Double checkout(Long usuarioId) {
+        List<CarritoItem> items = carritoItemRepository.findByUsuarioId(usuarioId);
+        if (items.isEmpty()) {
+            throw CarritoException.carritoVacio(usuarioId);
+        }
+
+        // Validar stock de todos los items antes de descontar nada
+        for (CarritoItem item : items) {
+            Producto producto = item.getProducto();
+            if (producto.getStock() == null || producto.getStock() < item.getCantidad()) {
+                throw ProductoException.sinStock(producto.getId());
+            }
+        }
+
+        // Calcular total y descontar stock
+        double total = 0.0;
+        for (CarritoItem item : items) {
+            Producto producto = item.getProducto();
+            producto.setStock(producto.getStock() - item.getCantidad());
+            productoRepository.save(producto);
+            total += producto.getPrecio() * item.getCantidad();
+        }
+
+        // Vaciar el carrito
+        carritoItemRepository.deleteAll(items);
+
+        return total;
     }
 }

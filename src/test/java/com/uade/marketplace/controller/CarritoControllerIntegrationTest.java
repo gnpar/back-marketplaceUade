@@ -48,7 +48,7 @@ class CarritoControllerIntegrationTest {
     void setUp() {
         usuario = usuarioRepository.save(new Usuario(null, "juanperez", "juan@test.com", "clave123", "Juan", "Perez",
                 LocalDate.of(2000, 1, 1), Sexo.MASCULINO));
-        producto = productoRepository.save(new Producto(null, "Mouse", "Mouse inalámbrico", 15000.00, null, null));
+        producto = productoRepository.save(new Producto(null, "Mouse", "Mouse inalámbrico", 15000.00, 10, null, null));
     }
 
     @Test
@@ -116,7 +116,7 @@ class CarritoControllerIntegrationTest {
     @Test
     void listarCarritoConItems() throws Exception {
         Producto otroProducto = productoRepository
-                .save(new Producto(null, "Teclado", "Teclado mecánico", 45000.00, null, null));
+                .save(new Producto(null, "Teclado", "Teclado mecánico", 45000.00, 10, null, null));
 
         mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
                 "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
@@ -150,4 +150,62 @@ class CarritoControllerIntegrationTest {
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.mensaje").value("Item del carrito con ID 999 no encontrado"));
     }
+
+    @Test
+    void checkoutCalculaTotalYDescuentaStock() throws Exception {
+        // Agrego 2 unidades del mouse (precio 15000, stock inicial 10)
+        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
+                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":2}"))
+                .andExpect(status().isOk());
+
+        // Checkout: total esperado = 15000 * 2 = 30000
+        mockMvc.perform(post("/api/carrito/{usuarioId}/checkout", usuario.getId())).andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(30000.00));
+
+        // El stock debe haber bajado de 10 a 8
+        assertThat(productoRepository.findById(producto.getId()).get().getStock()).isEqualTo(8);
+
+        // El carrito debe quedar vacío
+        assertThat(carritoItemRepository.findByUsuarioId(usuario.getId())).isEmpty();
+    }
+
+    @Test
+    void checkoutConCarritoVacioDevuelve400() throws Exception {
+        mockMvc.perform(post("/api/carrito/{usuarioId}/checkout", usuario.getId())).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void checkoutConStockInsuficienteDevuelve400() throws Exception {
+        // Producto con stock 1
+        Producto pocoStock = productoRepository
+                .save(new Producto(null, "Webcam", "Webcam HD", 20000.00, 1, null, null));
+
+        // Agrego 1 unidad al carrito (permitido, hay stock)
+        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
+                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + pocoStock.getId() + ",\"cantidad\":1}"))
+                .andExpect(status().isOk());
+
+        // Reduzco el stock del producto a 0 por fuera (simula que otro lo compró antes
+        // del checkout)
+        pocoStock.setStock(0);
+        productoRepository.save(pocoStock);
+
+        // Checkout debe fallar por falta de stock
+        mockMvc.perform(post("/api/carrito/{usuarioId}/checkout", usuario.getId())).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void agregarItemSinStockSuficienteDevuelve400() throws Exception {
+        // Producto con stock 2
+        Producto pocoStock = productoRepository
+                .save(new Producto(null, "Parlante", "Parlante bluetooth", 30000.00, 2, null, null));
+
+        // Intento agregar 5 unidades: no hay stock suficiente
+        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
+                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + pocoStock.getId() + ",\"cantidad\":5}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.status").value(400));
+    }
+
 }
