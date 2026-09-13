@@ -6,12 +6,16 @@ import com.uade.marketplace.exception.CarritoException;
 import com.uade.marketplace.exception.ProductoException;
 import com.uade.marketplace.exception.UsuarioException;
 import com.uade.marketplace.model.CarritoItem;
+import com.uade.marketplace.model.Pedido;
+import com.uade.marketplace.model.PedidoItem;
 import com.uade.marketplace.model.Producto;
 import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.repository.CarritoItemRepository;
+import com.uade.marketplace.repository.PedidoRepository;
 import com.uade.marketplace.repository.ProductoRepository;
 import com.uade.marketplace.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -23,12 +27,14 @@ public class CarritoService {
     private final CarritoItemRepository carritoItemRepository;
     private final UsuarioRepository usuarioRepository;
     private final ProductoRepository productoRepository;
+    private final PedidoRepository pedidoRepository;
 
     public CarritoService(CarritoItemRepository carritoItemRepository, UsuarioRepository usuarioRepository,
-            ProductoRepository productoRepository) {
+            ProductoRepository productoRepository, PedidoRepository pedidoRepository) {
         this.carritoItemRepository = carritoItemRepository;
         this.usuarioRepository = usuarioRepository;
         this.productoRepository = productoRepository;
+        this.pedidoRepository = pedidoRepository;
     }
 
     public List<CarritoItemResponseDTO> getCarrito(Long usuarioId) {
@@ -91,6 +97,9 @@ public class CarritoService {
     }
 
     public Double checkout(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> UsuarioException.noEncontrado(usuarioId));
+
         List<CarritoItem> items = carritoItemRepository.findByUsuarioId(usuarioId);
         if (items.isEmpty()) {
             throw CarritoException.carritoVacio(usuarioId);
@@ -104,14 +113,29 @@ public class CarritoService {
             }
         }
 
-        // Calcular total y descontar stock
+        Pedido pedido = new Pedido();
+        pedido.setUsuario(usuario);
+        pedido.setFecha(LocalDateTime.now());
+
+        // Calcular total, descontar stock y armar los items del pedido
         double total = 0.0;
         for (CarritoItem item : items) {
             Producto producto = item.getProducto();
             producto.setStock(producto.getStock() - item.getCantidad());
             productoRepository.save(producto);
+
             total += producto.getPrecio() * item.getCantidad();
+
+            PedidoItem pedidoItem = new PedidoItem();
+            pedidoItem.setPedido(pedido);
+            pedidoItem.setProducto(producto);
+            pedidoItem.setCantidad(item.getCantidad());
+            pedidoItem.setPrecioUnitario(producto.getPrecio());
+            pedido.getItems().add(pedidoItem);
         }
+
+        pedido.setTotal(total);
+        pedidoRepository.save(pedido);
 
         // Vaciar el carrito
         carritoItemRepository.deleteAll(items);
