@@ -61,7 +61,7 @@ class CarritoControllerIntegrationTest {
     void agregarItemCreaItem() throws Exception {
         mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
                 "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":2}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.id").isNumber())
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.usuarioId").value(usuario.getId()))
                 .andExpect(jsonPath("$.productoId").value(producto.getId()))
                 .andExpect(jsonPath("$.nombreProducto").value("Mouse")).andExpect(jsonPath("$.precio").value(15000.00))
