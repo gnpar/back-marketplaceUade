@@ -2,6 +2,7 @@ package com.uade.marketplace.service;
 
 import com.uade.marketplace.dto.CategoriaRequestDTO;
 import com.uade.marketplace.dto.CategoriaResponseDTO;
+import com.uade.marketplace.exception.CategoriaException;
 import com.uade.marketplace.model.Categoria;
 import com.uade.marketplace.repository.CategoriaRepository;
 import jakarta.transaction.Transactional;
@@ -31,18 +32,15 @@ public class CategoriaService {
     }
 
     public CategoriaResponseDTO getCategoriaById(Long id) {
-        Categoria categoria = categoriaRepository.findById(id).orElse(null);
-
-        if (categoria == null) {
-            return null;
-        }
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> CategoriaException.noEncontrada(id));
 
         return convertirADTO(categoria);
     }
 
     public CategoriaResponseDTO crearCategoria(CategoriaRequestDTO categoriaDTO) {
         if (categoriaRepository.existsByNombre(categoriaDTO.getNombre())) {
-            throw new IllegalArgumentException("Ya existe una categoria con el nombre: " + categoriaDTO.getNombre());
+            throw CategoriaException.nombreYaExiste(categoriaDTO.getNombre());
         }
 
         Categoria categoria = new Categoria();
@@ -54,12 +52,8 @@ public class CategoriaService {
     }
 
     public CategoriaResponseDTO actualizarCategoria(Long id, CategoriaRequestDTO categoriaDTO) {
-
-        Categoria categoria = categoriaRepository.findById(id).orElse(null);
-
-        if (categoria == null) {
-            return null;
-        }
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> CategoriaException.noEncontrada(id));
 
         categoria.setNombre(categoriaDTO.getNombre());
 
@@ -68,13 +62,12 @@ public class CategoriaService {
         return convertirADTO(guardada);
     }
 
-    public boolean eliminarCategoria(Long id) {
+    public void eliminarCategoria(Long id) {
         if (!categoriaRepository.existsById(id)) {
-            return false;
+            throw CategoriaException.noEncontrada(id);
         }
 
         categoriaRepository.deleteById(id);
-        return true;
     }
 
     private CategoriaResponseDTO convertirADTO(Categoria categoria) {
