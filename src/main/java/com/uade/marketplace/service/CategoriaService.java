@@ -32,8 +32,7 @@ public class CategoriaService {
     }
 
     public CategoriaResponseDTO getCategoriaById(Long id) {
-        Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> CategoriaException.noEncontrada(id));
+        Categoria categoria = categoriaRepository.findById(id).orElseThrow(() -> CategoriaException.noEncontrada(id));
 
         return convertirADTO(categoria);
     }
@@ -52,8 +51,7 @@ public class CategoriaService {
     }
 
     public CategoriaResponseDTO actualizarCategoria(Long id, CategoriaRequestDTO categoriaDTO) {
-        Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> CategoriaException.noEncontrada(id));
+        Categoria categoria = categoriaRepository.findById(id).orElseThrow(() -> CategoriaException.noEncontrada(id));
 
         categoria.setNombre(categoriaDTO.getNombre());
 
