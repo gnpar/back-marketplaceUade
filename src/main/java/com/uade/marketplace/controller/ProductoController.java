@@ -4,6 +4,7 @@ import com.uade.marketplace.dto.ProductoRequestDTO;
 import com.uade.marketplace.dto.ProductoResponseDTO;
 import com.uade.marketplace.service.ProductoService;
 import java.util.List;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,20 +28,21 @@ public class ProductoController {
 
     // get http://localhost:8080/api/productos
     @GetMapping()
-    public List<ProductoResponseDTO> getAllProductos() {
-        return productoService.getAllProductos();
+    public ResponseEntity<List<ProductoResponseDTO>> getAllProductos() {
+        return ResponseEntity.ok(productoService.getAllProductos());
     }
 
     // get http://localhost:8080/api/productos/1
     @GetMapping("/{id}")
-    public ProductoResponseDTO getProductoById(@PathVariable Long id) {
-        return productoService.getProductoById(id);
+    public ResponseEntity<ProductoResponseDTO> getProductoById(@PathVariable Long id) {
+        return ResponseEntity.ok(productoService.getProductoById(id));
     }
 
     // post http://localhost:8080/api/productos
     @PostMapping()
-    public ProductoResponseDTO crearProducto(@RequestBody ProductoRequestDTO productoDTO) {
-        return productoService.crearProducto(productoDTO);
+    public ResponseEntity<ProductoResponseDTO> crearProducto(@RequestBody ProductoRequestDTO productoDTO) {
+        ProductoResponseDTO creado = productoService.crearProducto(productoDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     // put http://localhost:8080/api/productos/1

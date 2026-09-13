@@ -28,14 +28,14 @@ public class UsuarioController {
 
     // get http://localhost:8080/api/usuarios
     @GetMapping()
-    public List<UsuarioResponseDTO> getAllUsuarios() {
-        return usuarioService.getAllUsuarios();
+    public ResponseEntity<List<UsuarioResponseDTO>> getAllUsuarios() {
+        return ResponseEntity.ok(usuarioService.getAllUsuarios());
     }
 
     // get http://localhost:8080/api/usuarios/1
     @GetMapping("/{id}")
-    public UsuarioResponseDTO getUsuarioById(@PathVariable Long id) {
-        return usuarioService.getUsuarioById(id);
+    public ResponseEntity<UsuarioResponseDTO> getUsuarioById(@PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.getUsuarioById(id));
     }
 
     // post http://localhost:8080/api/usuarios/registro
@@ -47,14 +47,15 @@ public class UsuarioController {
 
     // post http://localhost:8080/api/usuarios/login
     @PostMapping("/login")
-    public UsuarioResponseDTO login(@RequestBody LoginRequestDTO loginDTO) {
-        return usuarioService.login(loginDTO);
+    public ResponseEntity<UsuarioResponseDTO> login(@RequestBody LoginRequestDTO loginDTO) {
+        return ResponseEntity.ok(usuarioService.login(loginDTO));
     }
 
     // put http://localhost:8080/api/usuarios/1
     @PutMapping("/{id}")
-    public UsuarioResponseDTO actualizarUsuario(@PathVariable Long id, @RequestBody UsuarioRequestDTO usuarioDTO) {
-        return usuarioService.actualizarUsuario(id, usuarioDTO);
+    public ResponseEntity<UsuarioResponseDTO> actualizarUsuario(@PathVariable Long id,
+            @RequestBody UsuarioRequestDTO usuarioDTO) {
+        return ResponseEntity.ok(usuarioService.actualizarUsuario(id, usuarioDTO));
     }
 
     // delete http://localhost:8080/api/usuarios/1

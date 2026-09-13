@@ -39,7 +39,7 @@ class ProductoControllerIntegrationTest {
     void crearProducto() throws Exception {
         mockMvc.perform(post("/api/productos").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.id").isNumber())
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.nombre").value("Mouse"))
                 .andExpect(jsonPath("$.descripcion").value("Mouse inalámbrico"))
                 .andExpect(jsonPath("$.precio").value(15000.00));

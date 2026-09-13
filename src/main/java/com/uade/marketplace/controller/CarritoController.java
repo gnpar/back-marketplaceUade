@@ -4,6 +4,7 @@ import com.uade.marketplace.dto.CarritoItemRequestDTO;
 import com.uade.marketplace.dto.CarritoItemResponseDTO;
 import com.uade.marketplace.service.CarritoService;
 import java.util.List;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,14 +27,15 @@ public class CarritoController {
 
     // get http://localhost:8080/api/carrito/1
     @GetMapping("/{usuarioId}")
-    public List<CarritoItemResponseDTO> getCarrito(@PathVariable Long usuarioId) {
-        return carritoService.getCarrito(usuarioId);
+    public ResponseEntity<List<CarritoItemResponseDTO>> getCarrito(@PathVariable Long usuarioId) {
+        return ResponseEntity.ok(carritoService.getCarrito(usuarioId));
     }
 
     // post http://localhost:8080/api/carrito
     @PostMapping()
-    public CarritoItemResponseDTO agregarItem(@RequestBody CarritoItemRequestDTO itemDTO) {
-        return carritoService.agregarItem(itemDTO);
+    public ResponseEntity<CarritoItemResponseDTO> agregarItem(@RequestBody CarritoItemRequestDTO itemDTO) {
+        CarritoItemResponseDTO agregado = carritoService.agregarItem(itemDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(agregado);
     }
 
     // delete http://localhost:8080/api/carrito/1
