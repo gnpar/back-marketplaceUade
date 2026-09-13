@@ -4,6 +4,7 @@ import com.uade.marketplace.dto.CategoriaRequestDTO;
 import com.uade.marketplace.dto.CategoriaResponseDTO;
 import com.uade.marketplace.service.CategoriaService;
 import java.util.List;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,40 +28,34 @@ public class CategoriaController {
 
     // get http://localhost:8080/api/categorias
     @GetMapping()
-    public List<CategoriaResponseDTO> getAllCategorias() {
-        return categoriaService.getAllCategorias();
+    public ResponseEntity<List<CategoriaResponseDTO>> getAllCategorias() {
+        return ResponseEntity.ok(categoriaService.getAllCategorias());
     }
 
     // get http://localhost:8080/api/categorias/1
     @GetMapping("/{id}")
-    public CategoriaResponseDTO getCategoriaById(@PathVariable Long id) {
-        return categoriaService.getCategoriaById(id);
+    public ResponseEntity<CategoriaResponseDTO> getCategoriaById(@PathVariable Long id) {
+        return ResponseEntity.ok(categoriaService.getCategoriaById(id));
     }
 
     // post http://localhost:8080/api/categorias
     @PostMapping()
-    public CategoriaResponseDTO crearCategoria(@RequestBody CategoriaRequestDTO categoriaDTO) {
-        return categoriaService.crearCategoria(categoriaDTO);
+    public ResponseEntity<CategoriaResponseDTO> crearCategoria(@RequestBody CategoriaRequestDTO categoriaDTO) {
+        CategoriaResponseDTO creada = categoriaService.crearCategoria(categoriaDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(creada);
     }
 
     // put http://localhost:8080/api/categorias/1
     @PutMapping("/{id}")
     public ResponseEntity<CategoriaResponseDTO> actualizarCategoria(@PathVariable Long id,
             @RequestBody CategoriaRequestDTO categoriaDTO) {
-        CategoriaResponseDTO actualizada = categoriaService.actualizarCategoria(id, categoriaDTO);
-        if (actualizada == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(actualizada);
+        return ResponseEntity.ok(categoriaService.actualizarCategoria(id, categoriaDTO));
     }
 
     // delete http://localhost:8080/api/categorias/1
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarCategoria(@PathVariable Long id) {
-        boolean eliminado = categoriaService.eliminarCategoria(id);
-        if (!eliminado) {
-            return ResponseEntity.notFound().build();
-        }
+        categoriaService.eliminarCategoria(id);
         return ResponseEntity.noContent().build();
     }
 }

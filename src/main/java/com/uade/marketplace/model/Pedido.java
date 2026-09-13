@@ -35,7 +35,7 @@ public class Pedido {
 
     private Double total;
 
-    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true) 
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     // "si guardás o borrás un Pedido,
     // hacé lo mismo automáticamente
     // con todos sus PedidoItem".
