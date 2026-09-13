@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getStatus()).body(error);
     }
 
-    // Excepciones de Categoria  
+    // Excepciones de Categoria
     @ExceptionHandler(CategoriaException.class)
     public ResponseEntity<ErrorResponseDTO> handleCategoriaException(CategoriaException ex) {
         ErrorResponseDTO error = new ErrorResponseDTO(ex.getStatus().value(), ex.getMessage());
