@@ -2,6 +2,8 @@ package com.uade.marketplace.service;
 
 import com.uade.marketplace.dto.CarritoItemRequestDTO;
 import com.uade.marketplace.dto.CarritoItemResponseDTO;
+import com.uade.marketplace.dto.CheckoutResponseDTO;
+import com.uade.marketplace.dto.PedidoItemResponseDTO;
 import com.uade.marketplace.exception.CarritoException;
 import com.uade.marketplace.exception.ProductoException;
 import com.uade.marketplace.exception.UsuarioException;
@@ -78,11 +80,20 @@ public class CarritoService {
         return convertirADTO(guardado);
     }
 
-    public void quitarItem(Long id) {
-        if (!carritoItemRepository.existsById(id)) {
-            throw CarritoException.noEncontrado(id);
+    public void quitarItem(Long usuarioId, Long itemId) {
+        CarritoItem item = carritoItemRepository.findById(itemId)
+                .orElseThrow(() -> CarritoException.noEncontrado(itemId));
+        if (!item.getUsuario().getId().equals(usuarioId)) {
+            throw CarritoException.noPerteneceAlUsuario(itemId);
         }
-        carritoItemRepository.deleteById(id);
+        carritoItemRepository.deleteById(itemId);
+    }
+
+    public void vaciarCarrito(Long usuarioId) {
+        if (!usuarioRepository.existsById(usuarioId)) {
+            throw UsuarioException.noEncontrado(usuarioId);
+        }
+        carritoItemRepository.deleteAll(carritoItemRepository.findByUsuarioId(usuarioId));
     }
 
     private CarritoItemResponseDTO convertirADTO(CarritoItem item) {
@@ -96,7 +107,7 @@ public class CarritoService {
         return dto;
     }
 
-    public Double checkout(Long usuarioId) {
+    public CheckoutResponseDTO checkout(Long usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> UsuarioException.noEncontrado(usuarioId));
 
@@ -135,11 +146,31 @@ public class CarritoService {
         }
 
         pedido.setTotal(total);
-        pedidoRepository.save(pedido);
+        pedido = pedidoRepository.save(pedido);
 
         // Vaciar el carrito
         carritoItemRepository.deleteAll(items);
 
-        return total;
+        return convertirPedidoADTO(pedido);
+    }
+
+    private CheckoutResponseDTO convertirPedidoADTO(Pedido pedido) {
+        CheckoutResponseDTO dto = new CheckoutResponseDTO();
+        dto.setPedidoId(pedido.getId());
+        dto.setUsuarioId(pedido.getUsuario().getId());
+        dto.setFecha(pedido.getFecha());
+        dto.setTotal(pedido.getTotal());
+
+        List<PedidoItemResponseDTO> itemsDTO = new ArrayList<>();
+        for (PedidoItem item : pedido.getItems()) {
+            PedidoItemResponseDTO itemDTO = new PedidoItemResponseDTO();
+            itemDTO.setProductoId(item.getProducto().getId());
+            itemDTO.setNombreProducto(item.getProducto().getNombre());
+            itemDTO.setCantidad(item.getCantidad());
+            itemDTO.setPrecioUnitario(item.getPrecioUnitario());
+            itemsDTO.add(itemDTO);
+        }
+        dto.setItems(itemsDTO);
+        return dto;
     }
 }

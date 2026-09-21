@@ -139,16 +139,58 @@ class CarritoControllerIntegrationTest {
 
         Long itemId = carritoItemRepository.findByUsuarioId(usuario.getId()).get(0).getId();
 
-        mockMvc.perform(delete("/api/carrito/{id}", itemId)).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/carrito/{usuarioId}/items/{itemId}", usuario.getId(), itemId))
+                .andExpect(status().isNoContent());
 
         assertThat(carritoItemRepository.existsById(itemId)).isFalse();
     }
 
     @Test
     void quitarItemInexistenteDevuelve404() throws Exception {
-        mockMvc.perform(delete("/api/carrito/{id}", 999L)).andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
+        mockMvc.perform(delete("/api/carrito/{usuarioId}/items/{itemId}", usuario.getId(), 999L))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.mensaje").value("Item del carrito con ID 999 no encontrado"));
+    }
+
+    @Test
+    void quitarItemDeOtroUsuarioDevuelve403() throws Exception {
+        Usuario otro = usuarioRepository.save(new Usuario(null, "otrousuario", "otro@test.com", "clave456", "Otro",
+                "Usuario", LocalDate.of(1999, 5, 5), Sexo.MASCULINO));
+
+        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
+                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
+                .andExpect(status().isCreated());
+
+        Long itemId = carritoItemRepository.findByUsuarioId(usuario.getId()).get(0).getId();
+
+        mockMvc.perform(delete("/api/carrito/{usuarioId}/items/{itemId}", otro.getId(), itemId))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.status").value(403));
+
+        assertThat(carritoItemRepository.findById(itemId)).isPresent();
+    }
+
+    @Test
+    void vaciarCarritoEliminaTodosLosItems() throws Exception {
+        Producto otroProducto = productoRepository
+                .save(new Producto(null, "Teclado", "Teclado mecánico", 45000.00, 10, null, null));
+
+        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
+                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
+                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + otroProducto.getId() + ",\"cantidad\":2}"))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(delete("/api/carrito/{usuarioId}", usuario.getId())).andExpect(status().isNoContent());
+
+        assertThat(carritoItemRepository.findByUsuarioId(usuario.getId())).isEmpty();
+    }
+
+    @Test
+    void vaciarCarritoDeUsuarioInexistenteDevuelve404() throws Exception {
+        mockMvc.perform(delete("/api/carrito/{usuarioId}", 999L)).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.mensaje").value("Usuario con ID 999 no encontrado"));
     }
 
     @Test
@@ -160,7 +202,12 @@ class CarritoControllerIntegrationTest {
 
         // Checkout: total esperado = 15000 * 2 = 30000
         mockMvc.perform(post("/api/carrito/{usuarioId}/checkout", usuario.getId())).andExpect(status().isOk())
-                .andExpect(jsonPath("$").value(30000.00));
+                .andExpect(jsonPath("$.pedidoId").isNumber()).andExpect(jsonPath("$.usuarioId").value(usuario.getId()))
+                .andExpect(jsonPath("$.fecha").isNotEmpty()).andExpect(jsonPath("$.total").value(30000.00))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].nombreProducto").value("Mouse"))
+                .andExpect(jsonPath("$.items[0].cantidad").value(2))
+                .andExpect(jsonPath("$.items[0].precioUnitario").value(15000.00));
 
         // El stock debe haber bajado de 10 a 8
         assertThat(productoRepository.findById(producto.getId()).get().getStock()).isEqualTo(8);

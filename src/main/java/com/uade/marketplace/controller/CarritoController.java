@@ -2,6 +2,7 @@ package com.uade.marketplace.controller;
 
 import com.uade.marketplace.dto.CarritoItemRequestDTO;
 import com.uade.marketplace.dto.CarritoItemResponseDTO;
+import com.uade.marketplace.dto.CheckoutResponseDTO;
 import com.uade.marketplace.service.CarritoService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -38,17 +39,24 @@ public class CarritoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(agregado);
     }
 
-    // delete http://localhost:8080/api/carrito/1
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> quitarItem(@PathVariable Long id) {
-        carritoService.quitarItem(id);
+    // delete http://localhost:8080/api/carrito/1/items/5
+    @DeleteMapping("/{usuarioId}/items/{itemId}")
+    public ResponseEntity<Void> quitarItem(@PathVariable Long usuarioId, @PathVariable Long itemId) {
+        carritoService.quitarItem(usuarioId, itemId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // delete http://localhost:8080/api/carrito/1 (vaciar carrito sin comprar)
+    @DeleteMapping("/{usuarioId}")
+    public ResponseEntity<Void> vaciarCarrito(@PathVariable Long usuarioId) {
+        carritoService.vaciarCarrito(usuarioId);
         return ResponseEntity.noContent().build();
     }
 
     // post http://localhost:8080/api/carrito/1/checkout
     @PostMapping("/{usuarioId}/checkout")
-    public ResponseEntity<Double> checkout(@PathVariable Long usuarioId) {
-        Double total = carritoService.checkout(usuarioId);
-        return ResponseEntity.ok(total);
+    public ResponseEntity<CheckoutResponseDTO> checkout(@PathVariable Long usuarioId) {
+        CheckoutResponseDTO checkoutDTO = carritoService.checkout(usuarioId);
+        return ResponseEntity.ok(checkoutDTO);
     }
 }
