@@ -1,6 +1,7 @@
 package com.uade.marketplace.repository;
 
 import com.uade.marketplace.model.Categoria;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
@@ -11,4 +12,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 
     boolean existsByNombre(String nombre);
+
+    boolean existsByNombreAndIdNot(String nombre, Long id);
+
+    List<Categoria> findAllByOrderByNombreAsc();
 }

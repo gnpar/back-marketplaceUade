@@ -21,7 +21,7 @@ public class CategoriaService {
     }
 
     public List<CategoriaResponseDTO> getAllCategorias() {
-        List<Categoria> categorias = categoriaRepository.findAll();
+        List<Categoria> categorias = categoriaRepository.findAllByOrderByNombreAsc();
         List<CategoriaResponseDTO> dtos = new ArrayList<>();
 
         for (Categoria categoria : categorias) {
@@ -52,6 +52,10 @@ public class CategoriaService {
 
     public CategoriaResponseDTO actualizarCategoria(Long id, CategoriaRequestDTO categoriaDTO) {
         Categoria categoria = categoriaRepository.findById(id).orElseThrow(() -> CategoriaException.noEncontrada(id));
+
+        if (categoriaRepository.existsByNombreAndIdNot(categoriaDTO.getNombre(), id)) {
+            throw CategoriaException.nombreYaExiste(categoriaDTO.getNombre());
+        }
 
         categoria.setNombre(categoriaDTO.getNombre());
 

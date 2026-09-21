@@ -22,4 +22,8 @@ public class ProductoException extends RuntimeException {
     public static ProductoException sinStock(Long id) {
         return new ProductoException("Producto con ID " + id + " no tiene stock suficiente", HttpStatus.BAD_REQUEST);
     }
+
+    public static ProductoException datosInvalidos(String mensaje) {
+        return new ProductoException(mensaje, HttpStatus.BAD_REQUEST);
+    }
 }

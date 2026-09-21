@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 // http://localhost:8080/api/productos
@@ -27,8 +28,12 @@ public class ProductoController {
     }
 
     // get http://localhost:8080/api/productos
+    // get http://localhost:8080/api/productos?categoriaId=1
     @GetMapping()
-    public ResponseEntity<List<ProductoResponseDTO>> getAllProductos() {
+    public ResponseEntity<List<ProductoResponseDTO>> getAllProductos(@RequestParam(required = false) Long categoriaId) {
+        if (categoriaId != null) {
+            return ResponseEntity.ok(productoService.getProductosByCategoria(categoriaId));
+        }
         return ResponseEntity.ok(productoService.getAllProductos());
     }
 
