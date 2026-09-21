@@ -7,9 +7,9 @@ import com.uade.marketplace.exception.UsuarioException;
 import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,9 +17,11 @@ import org.springframework.stereotype.Service;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<UsuarioResponseDTO> getAllUsuarios() {
@@ -44,36 +46,22 @@ public class UsuarioService {
         if (usuarioRepository.existsByNombreUsuario(usuarioDTO.getNombreUsuario())) {
             throw UsuarioException.nombreUsuarioYaRegistrado(usuarioDTO.getNombreUsuario());
         }
-        validarFechaNacimientoYSexo(usuarioDTO);
 
-        Usuario usuario = new Usuario();
-        usuario.setNombreUsuario(usuarioDTO.getNombreUsuario());
-        usuario.setMail(usuarioDTO.getMail());
-        usuario.setContrasena(usuarioDTO.getContrasena());
-        usuario.setNombre(usuarioDTO.getNombre());
-        usuario.setApellido(usuarioDTO.getApellido());
-        usuario.setFechaNacimiento(usuarioDTO.getFechaNacimiento());
-        usuario.setSexo(usuarioDTO.getSexo());
+        // La contrasena nunca se guarda en texto plano: se almacena su hash BCrypt.
+        Usuario usuario = Usuario.builder().nombreUsuario(usuarioDTO.getNombreUsuario()).mail(usuarioDTO.getMail())
+                .contrasena(passwordEncoder.encode(usuarioDTO.getContrasena())).nombre(usuarioDTO.getNombre())
+                .apellido(usuarioDTO.getApellido()).fechaNacimiento(usuarioDTO.getFechaNacimiento())
+                .sexo(usuarioDTO.getSexo()).build();
+
         Usuario guardado = usuarioRepository.save(usuario);
         return convertirADTO(guardado);
     }
 
-    private void validarFechaNacimientoYSexo(UsuarioRequestDTO usuarioDTO) {
-        if (usuarioDTO.getFechaNacimiento() == null) {
-            throw UsuarioException.datosInvalidos("La fecha de nacimiento es obligatoria");
-        }
-        if (usuarioDTO.getFechaNacimiento().isAfter(LocalDate.now())) {
-            throw UsuarioException.datosInvalidos("La fecha de nacimiento no puede ser una fecha futura");
-        }
-        if (usuarioDTO.getSexo() == null) {
-            throw UsuarioException.datosInvalidos("El sexo es obligatorio");
-        }
-    }
-
-    // Login: identifica por mail + contraseña
+    // Login: identifica por mail + contrasena. Compara el texto plano recibido
+    // contra el hash almacenado con passwordEncoder.matches().
     public UsuarioResponseDTO login(LoginRequestDTO loginDTO) {
         Usuario usuario = usuarioRepository.findByMail(loginDTO.getMail()).orElse(null);
-        if (usuario == null || !usuario.getContrasena().equals(loginDTO.getContrasena())) {
+        if (usuario == null || !passwordEncoder.matches(loginDTO.getContrasena(), usuario.getContrasena())) {
             throw UsuarioException.credencialesIncorrectas();
         }
         return convertirADTO(usuario);
@@ -90,7 +78,6 @@ public class UsuarioService {
                 && usuarioRepository.existsByNombreUsuario(usuarioDTO.getNombreUsuario())) {
             throw UsuarioException.nombreUsuarioYaRegistrado(usuarioDTO.getNombreUsuario());
         }
-        validarFechaNacimientoYSexo(usuarioDTO);
 
         usuario.setNombreUsuario(usuarioDTO.getNombreUsuario());
         usuario.setMail(usuarioDTO.getMail());
@@ -99,9 +86,9 @@ public class UsuarioService {
         usuario.setFechaNacimiento(usuarioDTO.getFechaNacimiento());
         usuario.setSexo(usuarioDTO.getSexo());
 
-        // Si no mandan contraseña, conservo la actual
+        // Si no mandan contrasena, conservo la actual; si mandan, guardo su hash.
         if (usuarioDTO.getContrasena() != null && !usuarioDTO.getContrasena().isBlank()) {
-            usuario.setContrasena(usuarioDTO.getContrasena());
+            usuario.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
         }
 
         Usuario actualizado = usuarioRepository.save(usuario);
