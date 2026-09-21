@@ -27,4 +27,9 @@ public class CarritoException extends RuntimeException {
         return new CarritoException("El carrito del usuario " + usuarioId + " está vacío", HttpStatus.BAD_REQUEST);
     }
 
+    public static CarritoException noPerteneceAlUsuario(Long id) {
+        return new CarritoException("El item del carrito con ID " + id + " no pertenece al usuario",
+                HttpStatus.FORBIDDEN);
+    }
+
 }
