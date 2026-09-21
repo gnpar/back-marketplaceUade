@@ -1,13 +1,25 @@
 package com.uade.marketplace.exception;
 
 import com.uade.marketplace.dto.ErrorResponseDTO;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // Errores de validacion de los DTO (@Valid / @Validated): 400 Bad Request
+    // con el detalle de cada campo que no cumplio una restriccion.
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDTO> handleValidation(MethodArgumentNotValidException ex) {
+        String mensaje = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage()).collect(Collectors.joining("; "));
+        ErrorResponseDTO error = new ErrorResponseDTO(HttpStatus.BAD_REQUEST.value(), mensaje);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 
     // Excepciones de Usuario (noEncontrado, mailYaRegistrado, etc.)
     @ExceptionHandler(UsuarioException.class)

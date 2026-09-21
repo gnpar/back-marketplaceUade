@@ -4,9 +4,13 @@ import com.uade.marketplace.dto.LoginRequestDTO;
 import com.uade.marketplace.dto.UsuarioRequestDTO;
 import com.uade.marketplace.dto.UsuarioResponseDTO;
 import com.uade.marketplace.service.UsuarioService;
+import com.uade.marketplace.validation.OnCreate;
+import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,7 +44,8 @@ public class UsuarioController {
 
     // post http://localhost:8080/api/usuarios/registro
     @PostMapping("/registro")
-    public ResponseEntity<UsuarioResponseDTO> registrar(@RequestBody UsuarioRequestDTO usuarioDTO) {
+    public ResponseEntity<UsuarioResponseDTO> registrar(
+            @Validated({OnCreate.class, Default.class}) @RequestBody UsuarioRequestDTO usuarioDTO) {
         UsuarioResponseDTO creado = usuarioService.crearUsuario(usuarioDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
@@ -54,7 +59,7 @@ public class UsuarioController {
     // put http://localhost:8080/api/usuarios/1
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> actualizarUsuario(@PathVariable Long id,
-            @RequestBody UsuarioRequestDTO usuarioDTO) {
+            @Valid @RequestBody UsuarioRequestDTO usuarioDTO) {
         return ResponseEntity.ok(usuarioService.actualizarUsuario(id, usuarioDTO));
     }
 

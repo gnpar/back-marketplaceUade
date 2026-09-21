@@ -48,6 +48,22 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
+		<!-- Bean Validation (Hibernate Validator): validaciones declarativas en los DTO -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<!--
+			Solo el modulo de criptografia de Spring Security (BCryptPasswordEncoder).
+			No se usa spring-boot-starter-security a proposito: evitamos activar el
+			filter chain por defecto (que bloquearia todos los endpoints) para no
+			interferir con la tarea de Login/JWT y roles de otros integrantes.
+		-->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-crypto</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
