@@ -1,11 +1,13 @@
 package com.uade.marketplace.service;
 
 import com.uade.marketplace.dto.LoginRequestDTO;
+import com.uade.marketplace.dto.LoginResponseDTO;
 import com.uade.marketplace.dto.UsuarioRequestDTO;
 import com.uade.marketplace.dto.UsuarioResponseDTO;
 import com.uade.marketplace.exception.UsuarioException;
 import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.repository.UsuarioRepository;
+import com.uade.marketplace.security.JwtService;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +20,12 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     public List<UsuarioResponseDTO> getAllUsuarios() {
@@ -57,14 +61,13 @@ public class UsuarioService {
         return convertirADTO(guardado);
     }
 
-    // Login: identifica por mail + contrasena. Compara el texto plano recibido
-    // contra el hash almacenado con passwordEncoder.matches().
-    public UsuarioResponseDTO login(LoginRequestDTO loginDTO) {
+    public LoginResponseDTO login(LoginRequestDTO loginDTO) {
         Usuario usuario = usuarioRepository.findByMail(loginDTO.getMail()).orElse(null);
         if (usuario == null || !passwordEncoder.matches(loginDTO.getContrasena(), usuario.getContrasena())) {
             throw UsuarioException.credencialesIncorrectas();
         }
-        return convertirADTO(usuario);
+        String token = jwtService.generarToken(usuario.getMail());
+        return new LoginResponseDTO(convertirADTO(usuario), token);
     }
 
     public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO usuarioDTO) {
