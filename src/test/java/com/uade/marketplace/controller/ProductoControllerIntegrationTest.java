@@ -11,17 +11,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.uade.marketplace.model.Categoria;
 import com.uade.marketplace.model.Producto;
+import com.uade.marketplace.model.Rol;
 import com.uade.marketplace.model.Sexo;
 import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.repository.CategoriaRepository;
 import com.uade.marketplace.repository.ProductoRepository;
 import com.uade.marketplace.repository.UsuarioRepository;
+import com.uade.marketplace.security.JwtService;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +36,9 @@ class ProductoControllerIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private JwtService jwtService;
 
     @Autowired
     private ProductoRepository productoRepository;
@@ -56,7 +62,7 @@ class ProductoControllerIntegrationTest {
     // Crea un usuario directo en la BD (no pasa por el registro).
     private Usuario crearUsuarioEnBD(String nombreUsuario, String mail) {
         return usuarioRepository.save(new Usuario(null, nombreUsuario, mail, "clave123", "Juan", "Perez",
-                LocalDate.of(1995, 5, 20), Sexo.MASCULINO));
+                LocalDate.of(1995, 5, 20), Sexo.MASCULINO, Rol.USUARIO));
     }
 
     private Producto guardarProducto(String nombre, Usuario duenio) {
@@ -80,7 +86,7 @@ class ProductoControllerIntegrationTest {
 
     @Test
     void crearProductoAsignaElUsuarioAutenticadoComoVendedor() throws Exception {
-        mockMvc.perform(post("/api/productos").principal(() -> vendedor.getMail())
+        mockMvc.perform(post("/api/productos").header(HttpHeaders.AUTHORIZATION, bearer(vendedor))
                 .contentType(MediaType.APPLICATION_JSON).content(
                         "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"categoriaId\":"
                                 + categoriaId + "}"))
@@ -93,8 +99,8 @@ class ProductoControllerIntegrationTest {
 
     @Test
     void crearProductoConUsuarioInexistenteDevuelve401() throws Exception {
-        mockMvc.perform(post("/api/productos").principal(() -> "nadie@test.com").contentType(MediaType.APPLICATION_JSON)
-                .content(
+        mockMvc.perform(post("/api/productos").header(HttpHeaders.AUTHORIZATION, bearerDeMail("nadie@test.com"))
+                .contentType(MediaType.APPLICATION_JSON).content(
                         "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"categoriaId\":"
                                 + categoriaId + "}"))
                 .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.status").value(401));
@@ -130,7 +136,7 @@ class ProductoControllerIntegrationTest {
     void actualizarProductoPorSuVendedor() throws Exception {
         Producto producto = guardarProducto("Monitor", vendedor);
 
-        mockMvc.perform(put("/api/productos/{id}", producto.getId()).principal(() -> vendedor.getMail())
+        mockMvc.perform(put("/api/productos/{id}", producto.getId()).header(HttpHeaders.AUTHORIZATION, bearer(vendedor))
                 .contentType(MediaType.APPLICATION_JSON).content(
                         "{\"nombre\":\"Monitor 4K\",\"descripcion\":\"Monitor 32 pulgadas 4K\",\"precio\":450000.00,\"categoriaId\":"
                                 + categoriaId + "}"))
@@ -147,7 +153,7 @@ class ProductoControllerIntegrationTest {
         Producto producto = guardarProducto("Monitor", vendedor);
         Usuario otro = crearUsuarioEnBD("otro_vendedor", "otro@test.com");
 
-        mockMvc.perform(put("/api/productos/{id}", producto.getId()).principal(() -> otro.getMail())
+        mockMvc.perform(put("/api/productos/{id}", producto.getId()).header(HttpHeaders.AUTHORIZATION, bearer(otro))
                 .contentType(MediaType.APPLICATION_JSON).content(
                         "{\"nombre\":\"Monitor 4K\",\"descripcion\":\"Monitor 32 pulgadas 4K\",\"precio\":450000.00,\"categoriaId\":"
                                 + categoriaId + "}"))
@@ -156,7 +162,7 @@ class ProductoControllerIntegrationTest {
 
     @Test
     void actualizarProductoInexistente() throws Exception {
-        mockMvc.perform(put("/api/productos/{id}", 999L).principal(() -> vendedor.getMail())
+        mockMvc.perform(put("/api/productos/{id}", 999L).header(HttpHeaders.AUTHORIZATION, bearer(vendedor))
                 .contentType(MediaType.APPLICATION_JSON).content(
                         "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"categoriaId\":"
                                 + categoriaId + "}"))
@@ -167,7 +173,8 @@ class ProductoControllerIntegrationTest {
     void eliminarProductoPorSuVendedor() throws Exception {
         Producto producto = guardarProducto("Teclado", vendedor);
 
-        mockMvc.perform(delete("/api/productos/{id}", producto.getId()).principal(() -> vendedor.getMail()))
+        mockMvc.perform(
+                delete("/api/productos/{id}", producto.getId()).header(HttpHeaders.AUTHORIZATION, bearer(vendedor)))
                 .andExpect(status().isNoContent());
 
         assertFalse(productoRepository.existsById(producto.getId()));
@@ -178,7 +185,7 @@ class ProductoControllerIntegrationTest {
         Producto producto = guardarProducto("Teclado", vendedor);
         Usuario otro = crearUsuarioEnBD("otro_vendedor", "otro@test.com");
 
-        mockMvc.perform(delete("/api/productos/{id}", producto.getId()).principal(() -> otro.getMail()))
+        mockMvc.perform(delete("/api/productos/{id}", producto.getId()).header(HttpHeaders.AUTHORIZATION, bearer(otro)))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.status").value(403));
 
         assertTrue(productoRepository.existsById(producto.getId()));
@@ -186,7 +193,7 @@ class ProductoControllerIntegrationTest {
 
     @Test
     void eliminarProductoInexistente() throws Exception {
-        mockMvc.perform(delete("/api/productos/{id}", 999L).principal(() -> vendedor.getMail()))
+        mockMvc.perform(delete("/api/productos/{id}", 999L).header(HttpHeaders.AUTHORIZATION, bearer(vendedor)))
                 .andExpect(status().isNotFound());
     }
 
@@ -207,12 +214,12 @@ class ProductoControllerIntegrationTest {
     void filtrarProductosPorCategoria() throws Exception {
         Long otraCategoriaId = categoriaRepository.save(new Categoria(null, "Indumentaria")).getId();
 
-        mockMvc.perform(post("/api/productos").principal(() -> vendedor.getMail())
+        mockMvc.perform(post("/api/productos").header(HttpHeaders.AUTHORIZATION, bearer(vendedor))
                 .contentType(MediaType.APPLICATION_JSON).content(
                         "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"categoriaId\":"
                                 + categoriaId + "}"))
                 .andExpect(status().isCreated());
-        mockMvc.perform(post("/api/productos").principal(() -> vendedor.getMail())
+        mockMvc.perform(post("/api/productos").header(HttpHeaders.AUTHORIZATION, bearer(vendedor))
                 .contentType(MediaType.APPLICATION_JSON).content(
                         "{\"nombre\":\"Zapatillas\",\"descripcion\":\"Zapatillas deportivas\",\"precio\":50000.00,\"categoriaId\":"
                                 + otraCategoriaId + "}"))
@@ -265,9 +272,21 @@ class ProductoControllerIntegrationTest {
 
     @Test
     void crearProductoConCategoriaInexistente() throws Exception {
-        mockMvc.perform(post("/api/productos").principal(() -> vendedor.getMail())
+        mockMvc.perform(post("/api/productos").header(HttpHeaders.AUTHORIZATION, bearer(vendedor))
                 .contentType(MediaType.APPLICATION_JSON).content(
                         "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"categoriaId\":999}"))
                 .andExpect(status().isNotFound());
     }
+
+    // Todas las rutas protegidas se prueban con un JWT real: se emite con el
+    // mismo JwtService de la app y viaja en el header Authorization, igual que
+    // lo haria el frontend.
+    private String bearer(Usuario usuario) {
+        return bearerDeMail(usuario.getMail());
+    }
+
+    private String bearerDeMail(String mail) {
+        return "Bearer " + jwtService.generarToken(mail);
+    }
+
 }

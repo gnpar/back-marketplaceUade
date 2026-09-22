@@ -5,6 +5,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -33,4 +34,19 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     private Sexo sexo;
 
+    // Rol con el que se arman las autoridades de Spring Security al validar el
+    // JWT. El registro siempre crea usuarios con rol USUARIO; ADMIN se asigna
+    // desde la base de datos.
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private Rol rol = Rol.USUARIO;
+
+    // Red de seguridad para los usuarios creados con el constructor completo
+    // (tests, datos de prueba) que no indican rol.
+    @PrePersist
+    void asignarRolPorDefecto() {
+        if (rol == null) {
+            rol = Rol.USUARIO;
+        }
+    }
 }

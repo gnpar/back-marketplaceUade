@@ -2,16 +2,46 @@
 # Archivo de referencia de solicitudes al servicio desarrollado.
 # Para pruebas rápidas
 #
-# Nota: los endpoints de escritura (POST/PUT/DELETE de productos y el carrito)
-# requieren usuario autenticado. El backend resuelve el usuario desde el
-# Principal (mail del JWT); hasta que exista el filtro de validacion del JWT,
-# estas llamadas devuelven 401 sin autenticacion.
+# Las rutas protegidas piden el JWT en el header Authorization. Ejecutar primero
+# "Registro" y "Login": el login guarda el token en la variable {{token}} y el
+# resto de las llamadas lo reutilizan.
 #
+
+### Registro de un usuario
+
+POST http://localhost:8080/api/usuarios/registro
+Content-Type: application/json
+
+{
+  "nombreUsuario": "ana123",
+  "mail": "ana@test.com",
+  "contrasena": "Clave1234",
+  "nombre": "Ana",
+  "apellido": "Gomez",
+  "fechaNacimiento": "1998-03-15",
+  "sexo": "FEMENINO"
+}
+
+### Login (guarda el token para las llamadas siguientes)
+
+POST http://localhost:8080/api/usuarios/login
+Content-Type: application/json
+
+{
+  "mail": "ana@test.com",
+  "contrasena": "Clave1234"
+}
+
+> {%
+  client.global.set("token", response.body.token);
+  client.log(`token: ${response.body.token}`);
+%}
 
 ### Crear un producto (requiere autenticacion)
 
 POST http://localhost:8080/api/productos
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "nombre": "Notebook Dell",
@@ -39,6 +69,7 @@ Accept: application/json
 
 PUT http://localhost:8080/api/productos/1
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "nombre": "Notebook Dell XPS",
@@ -50,6 +81,31 @@ Content-Type: application/json
 ### Eliminar un producto (requiere autenticacion y ser el vendedor)
 
 DELETE http://localhost:8080/api/productos/1
+Authorization: Bearer {{token}}
+
+### Ver el carrito (requiere autenticacion)
+
+GET http://localhost:8080/api/carrito
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### Crear una categoria (requiere rol ADMIN)
+# Para probarlo hay que promover al usuario en la base:
+#   UPDATE usuarios SET rol = 'ADMIN' WHERE mail = 'ana@test.com';
+# No hace falta volver a loguearse: el rol se lee de la base al validar el token.
+
+POST http://localhost:8080/api/categorias
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombre": "Informática"
+}
+
+### Ruta protegida sin token: devuelve 401
+
+GET http://localhost:8080/api/carrito
+Accept: application/json
 
 ### Obtener la lista de endpoints (Actuator)
 

@@ -83,7 +83,7 @@ Los tests corren sobre H2 (perfil `h2`, activado por el build), no requieren MyS
 ### Gestión de usuarios
 
 - **Registro**: solicita nombre de usuario, mail, contraseña, nombre y apellido.
-- **Login**: identifica al usuario mediante mail y contraseña.
+- **Login**: identifica al usuario mediante mail y contraseña y devuelve un JWT con vencimiento, que el cliente manda en el header `Authorization` de las rutas protegidas (ver [Autenticación y permisos](#autenticación-y-permisos-jwt)).
 
 ### Catálogo de productos
 
@@ -114,6 +114,51 @@ Base: `http://localhost:8080/api/productos`
 | PUT | `/api/productos/{id}` | Actualizar producto (404 si no existe; 403 si no lo creó el usuario autenticado) |
 | DELETE | `/api/productos/{id}` | Eliminar producto (204 si se elimina; 403 si no lo creó el usuario autenticado; 404 si no existe) |
 
-> **Autenticación**: los endpoints de escritura (POST/PUT/DELETE de `/api/productos` y todo `/api/carrito`)
-> resuelven el usuario a partir del `Principal` (mail = subject del JWT). Hasta que se implemente el filtro de
-> validación del JWT, los tests lo simulan con `MockMvc.principal(...)`; sin `Principal` devuelven 401.
+## Autenticación y permisos (JWT)
+
+La API es *stateless*: no hay sesión ni cookies. El login (`POST /api/usuarios/login`) devuelve un JWT y,
+a partir de ahí, cada request lo manda en el header:
+
+```
+Authorization: Bearer <token>
+```
+
+**Contrato del token**: firmado con HS256 y la clave `jwt.secret`, `sub` = mail del usuario, `exp` = emisión +
+`jwt.expiration` ms (24 hs por defecto). El rol **no** viaja en el token: se lee de la base de datos al
+validarlo, así un cambio de rol tiene efecto sin esperar a que el token venza.
+
+**Cómo se valida** (`com.uade.marketplace.security`):
+
+1. `JwtAuthenticationFilter` (un `OncePerRequestFilter`) lee el header, valida firma y vencimiento con
+   `JwtService` y, si está todo bien, carga al usuario con `UsuarioDetailsService` (`UserDetailsService`) y lo
+   deja autenticado en el `SecurityContext` de esa request.
+2. Si no hay token, está vencido, la firma no verifica o el usuario ya no existe, la request sigue anónima: el
+   filtro nunca responde el error, lo decide la cadena de Spring Security según la ruta.
+3. `SecurityConfig` define los permisos por ruta; los errores salen con el mismo formato JSON que el resto de la
+   API (`401 Usuario no autenticado`, `403 No tenés permisos para acceder a este recurso`).
+
+En los controllers el usuario autenticado se resuelve desde el `Principal`, cuyo nombre es el mail.
+
+### Permisos por ruta
+
+| Ruta | Permiso |
+| --- | --- |
+| `POST /api/usuarios/registro`, `POST /api/usuarios/login` | Público |
+| `GET /api/productos/**`, `GET /api/categorias/**` | Público (catálogo) |
+| `POST/PUT/DELETE /api/productos/**` | Autenticado (y ser el vendedor para editar/borrar) |
+| `/api/carrito/**` | Autenticado |
+| `GET /api/usuarios/{id}` | Autenticado |
+| `PUT/DELETE /api/usuarios/{id}` | La propia cuenta, o rol `ADMIN` |
+| `GET /api/usuarios` (listado completo) | Rol `ADMIN` |
+| `POST/PUT/DELETE /api/categorias/**` | Rol `ADMIN` |
+| `/actuator/**`, `/h2-console/**` | Público (herramientas de desarrollo) |
+
+### Roles
+
+`Usuario.rol` es un enum (`USUARIO` / `ADMIN`) que se traduce a la autoridad `ROLE_USUARIO` / `ROLE_ADMIN`.
+El registro **siempre** crea usuarios con rol `USUARIO`: el rol no se puede mandar en el alta. Para tener un
+administrador se promueve un usuario desde la base:
+
+```sql
+UPDATE usuarios SET rol = 'ADMIN' WHERE mail = 'admin@test.com';
+```

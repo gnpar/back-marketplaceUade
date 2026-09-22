@@ -1,5 +1,6 @@
 package com.uade.marketplace.dto;
 
+import com.uade.marketplace.model.Rol;
 import com.uade.marketplace.model.Sexo;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -17,4 +18,5 @@ public class UsuarioResponseDTO {
     private String apellido;
     private LocalDate fechaNacimiento;
     private Sexo sexo;
+    private Rol rol;
 }

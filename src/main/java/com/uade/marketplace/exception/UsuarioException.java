@@ -32,6 +32,10 @@ public class UsuarioException extends RuntimeException {
         return new UsuarioException(mensaje, HttpStatus.BAD_REQUEST);
     }
 
+    public static UsuarioException sinPermiso() {
+        return new UsuarioException("Solo podes gestionar tu propia cuenta", HttpStatus.FORBIDDEN);
+    }
+
     public static UsuarioException noAutenticado() {
         return new UsuarioException("Usuario no autenticado", HttpStatus.UNAUTHORIZED);
     }

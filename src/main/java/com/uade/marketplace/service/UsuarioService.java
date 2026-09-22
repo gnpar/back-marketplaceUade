@@ -5,6 +5,7 @@ import com.uade.marketplace.dto.LoginResponseDTO;
 import com.uade.marketplace.dto.UsuarioRequestDTO;
 import com.uade.marketplace.dto.UsuarioResponseDTO;
 import com.uade.marketplace.exception.UsuarioException;
+import com.uade.marketplace.model.Rol;
 import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.repository.UsuarioRepository;
 import com.uade.marketplace.security.JwtService;
@@ -56,7 +57,7 @@ public class UsuarioService {
         Usuario usuario = Usuario.builder().nombreUsuario(usuarioDTO.getNombreUsuario()).mail(usuarioDTO.getMail())
                 .contrasena(passwordEncoder.encode(usuarioDTO.getContrasena())).nombre(usuarioDTO.getNombre())
                 .apellido(usuarioDTO.getApellido()).fechaNacimiento(usuarioDTO.getFechaNacimiento())
-                .sexo(usuarioDTO.getSexo()).build();
+                .sexo(usuarioDTO.getSexo()).rol(Rol.USUARIO).build();
 
         Usuario guardado = usuarioRepository.save(usuario);
         return convertirADTO(guardado);
@@ -71,7 +72,8 @@ public class UsuarioService {
         return new LoginResponseDTO(convertirADTO(usuario), token);
     }
 
-    public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO usuarioDTO) {
+    public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO usuarioDTO, Usuario solicitante) {
+        validarPuedeGestionar(solicitante, id);
         Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> UsuarioException.noEncontrado(id));
 
         // Solo valido unicidad si el campo efectivamente cambió
@@ -99,7 +101,8 @@ public class UsuarioService {
         return convertirADTO(actualizado);
     }
 
-    public void eliminarUsuario(Long id) {
+    public void eliminarUsuario(Long id, Usuario solicitante) {
+        validarPuedeGestionar(solicitante, id);
         if (!usuarioRepository.existsById(id)) {
             throw UsuarioException.noEncontrado(id);
         }
@@ -115,6 +118,17 @@ public class UsuarioService {
         return usuarioRepository.findByMail(principal.getName()).orElseThrow(UsuarioException::noAutenticado);
     }
 
+    // Un usuario solo puede modificar o borrar su propia cuenta; el ADMIN puede
+    // gestionar cualquiera.
+    private void validarPuedeGestionar(Usuario solicitante, Long id) {
+        if (solicitante == null) {
+            throw UsuarioException.noAutenticado();
+        }
+        if (solicitante.getRol() != Rol.ADMIN && !solicitante.getId().equals(id)) {
+            throw UsuarioException.sinPermiso();
+        }
+    }
+
     private UsuarioResponseDTO convertirADTO(Usuario usuario) {
         UsuarioResponseDTO dto = new UsuarioResponseDTO();
         dto.setId(usuario.getId());
@@ -124,6 +138,7 @@ public class UsuarioService {
         dto.setApellido(usuario.getApellido());
         dto.setFechaNacimiento(usuario.getFechaNacimiento());
         dto.setSexo(usuario.getSexo());
+        dto.setRol(usuario.getRol());
         return dto;
     }
 }
