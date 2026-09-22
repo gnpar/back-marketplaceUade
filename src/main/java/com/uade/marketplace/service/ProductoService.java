@@ -4,10 +4,13 @@ import com.uade.marketplace.dto.ProductoRequestDTO;
 import com.uade.marketplace.dto.ProductoResponseDTO;
 import com.uade.marketplace.exception.CategoriaException;
 import com.uade.marketplace.exception.ProductoException;
+import com.uade.marketplace.exception.UsuarioException;
 import com.uade.marketplace.model.Categoria;
 import com.uade.marketplace.model.Producto;
+import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.repository.CategoriaRepository;
 import com.uade.marketplace.repository.ProductoRepository;
+import com.uade.marketplace.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,31 +22,33 @@ public class ProductoService {
 
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public ProductoService(ProductoRepository productoRepository, CategoriaRepository categoriaRepository) {
+    public ProductoService(ProductoRepository productoRepository, CategoriaRepository categoriaRepository,
+            UsuarioRepository usuarioRepository) {
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
-    public List<ProductoResponseDTO> getAllProductos() {
-        List<Producto> productos = productoRepository.findAllByOrderByNombreAsc();
-        List<ProductoResponseDTO> dtos = new ArrayList<>();
-        for (Producto producto : productos) {
-            dtos.add(convertirADTO(producto));
+    public List<ProductoResponseDTO> getProductos(Long categoriaId, Long usuarioId) {
+        if (usuarioId != null) {
+            validarUsuario(usuarioId);
         }
-        return dtos;
-    }
-
-    public List<ProductoResponseDTO> getProductosByCategoria(Long categoriaId) {
-        if (!categoriaRepository.existsById(categoriaId)) {
-            throw CategoriaException.noEncontrada(categoriaId);
+        if (categoriaId != null) {
+            validarCategoria(categoriaId);
         }
-        List<Producto> productos = productoRepository.findByCategoriaIdOrderByNombreAsc(categoriaId);
-        List<ProductoResponseDTO> dtos = new ArrayList<>();
-        for (Producto producto : productos) {
-            dtos.add(convertirADTO(producto));
+        if (usuarioId != null && categoriaId != null) {
+            return convertirADTOs(
+                    productoRepository.findByUsuarioIdAndCategoriaIdOrderByNombreAsc(usuarioId, categoriaId));
         }
-        return dtos;
+        if (usuarioId != null) {
+            return convertirADTOs(productoRepository.findByUsuarioIdOrderByNombreAsc(usuarioId));
+        }
+        if (categoriaId != null) {
+            return convertirADTOs(productoRepository.findByCategoriaIdOrderByNombreAsc(categoriaId));
+        }
+        return convertirADTOs(productoRepository.findAllByOrderByNombreAsc());
     }
 
     public ProductoResponseDTO getProductoById(Long id) {
@@ -51,7 +56,8 @@ public class ProductoService {
         return convertirADTO(producto);
     }
 
-    public ProductoResponseDTO crearProducto(ProductoRequestDTO productoDTO) {
+    public ProductoResponseDTO crearProducto(ProductoRequestDTO productoDTO, Long usuarioId) {
+        Usuario usuario = obtenerUsuario(usuarioId);
         Categoria categoria = obtenerCategoria(productoDTO.getCategoriaId());
 
         Producto producto = new Producto();
@@ -60,14 +66,16 @@ public class ProductoService {
         producto.setPrecio(productoDTO.getPrecio());
         producto.setStock(productoDTO.getStock());
         producto.setCategoria(categoria);
+        producto.setUsuario(usuario);
 
         Producto guardado = productoRepository.save(producto);
 
         return convertirADTO(guardado);
     }
 
-    public ProductoResponseDTO actualizarProducto(Long id, ProductoRequestDTO productoDTO) {
+    public ProductoResponseDTO actualizarProducto(Long id, ProductoRequestDTO productoDTO, Long usuarioId) {
         Producto producto = productoRepository.findById(id).orElseThrow(() -> ProductoException.noEncontrado(id));
+        validarPropietario(producto, usuarioId);
         Categoria categoria = obtenerCategoria(productoDTO.getCategoriaId());
 
         producto.setNombre(productoDTO.getNombre());
@@ -79,6 +87,41 @@ public class ProductoService {
         Producto guardado = productoRepository.save(producto);
 
         return convertirADTO(guardado);
+    }
+
+    public void eliminarProducto(Long id, Long usuarioId) {
+        Producto producto = productoRepository.findById(id).orElseThrow(() -> ProductoException.noEncontrado(id));
+        validarPropietario(producto, usuarioId);
+        productoRepository.delete(producto);
+    }
+
+    private Usuario obtenerUsuario(Long usuarioId) {
+        if (usuarioId == null) {
+            throw ProductoException.datosInvalidos("El usuario es obligatorio");
+        }
+        return usuarioRepository.findById(usuarioId).orElseThrow(() -> UsuarioException.noEncontrado(usuarioId));
+    }
+
+    private void validarUsuario(Long usuarioId) {
+        if (!usuarioRepository.existsById(usuarioId)) {
+            throw UsuarioException.noEncontrado(usuarioId);
+        }
+    }
+
+    private void validarCategoria(Long categoriaId) {
+        if (!categoriaRepository.existsById(categoriaId)) {
+            throw CategoriaException.noEncontrada(categoriaId);
+        }
+    }
+
+    // Solo el usuario que publico el producto puede modificarlo o eliminarlo.
+    private void validarPropietario(Producto producto, Long usuarioId) {
+        if (usuarioId == null) {
+            throw UsuarioException.noAutenticado();
+        }
+        if (!producto.getUsuario().getId().equals(usuarioId)) {
+            throw ProductoException.noPerteneceAlUsuario(producto.getId());
+        }
     }
 
     private Categoria obtenerCategoria(Long categoriaId) {
@@ -89,11 +132,12 @@ public class ProductoService {
                 .orElseThrow(() -> CategoriaException.noEncontrada(categoriaId));
     }
 
-    public void eliminarProducto(Long id) {
-        if (!productoRepository.existsById(id)) {
-            throw ProductoException.noEncontrado(id);
+    private List<ProductoResponseDTO> convertirADTOs(List<Producto> productos) {
+        List<ProductoResponseDTO> dtos = new ArrayList<>();
+        for (Producto producto : productos) {
+            dtos.add(convertirADTO(producto));
         }
-        productoRepository.deleteById(id);
+        return dtos;
     }
 
     private ProductoResponseDTO convertirADTO(Producto producto) {
@@ -104,6 +148,7 @@ public class ProductoService {
         dto.setPrecio(producto.getPrecio());
         dto.setStock(producto.getStock());
         dto.setCategoriaId(producto.getCategoria() != null ? producto.getCategoria().getId() : null);
+        dto.setUsuarioId(producto.getUsuario().getId());
         return dto;
     }
 }

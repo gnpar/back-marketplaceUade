@@ -9,6 +9,7 @@ import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.repository.UsuarioRepository;
 import com.uade.marketplace.security.JwtService;
 import jakarta.transaction.Transactional;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -103,6 +104,15 @@ public class UsuarioService {
             throw UsuarioException.noEncontrado(id);
         }
         usuarioRepository.deleteById(id);
+    }
+
+    // Resuelve el usuario autenticado a partir del Principal que deja el filtro
+    // de JWT (el nombre del principal es el mail, subject del token).
+    public Usuario obtenerAutenticado(Principal principal) {
+        if (principal == null || principal.getName() == null || principal.getName().isBlank()) {
+            throw UsuarioException.noAutenticado();
+        }
+        return usuarioRepository.findByMail(principal.getName()).orElseThrow(UsuarioException::noAutenticado);
     }
 
     private UsuarioResponseDTO convertirADTO(Usuario usuario) {
