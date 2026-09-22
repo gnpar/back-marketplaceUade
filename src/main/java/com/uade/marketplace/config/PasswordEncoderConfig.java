@@ -14,10 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * </p>
  *
  * <p>
- * Se declara en una clase aparte (y no se trae el starter de seguridad
- * completo) para no activar la cadena de filtros de Spring Security por
- * defecto, que dejaria la tarea de Login/JWT y roles a cargo de otro integrante
- * del equipo.
+ * Se declara en una clase aparte de {@link SecurityConfig} para que el registro
+ * y el login dependan solo del encoder y no de toda la configuracion de la
+ * cadena de filtros.
  * </p>
  */
 @Configuration

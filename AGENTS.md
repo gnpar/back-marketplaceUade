@@ -36,10 +36,19 @@ src/main/java/com/uade/marketplace/
 ├── controller/ProductoController.java # API REST
 ├── service/ProductoService.java       # Lógica de negocio (@Transactional)
 ├── repository/ProductoRepository.java # Spring Data JPA
-└── model/Producto.java                # Entidad JPA
+├── model/Producto.java                # Entidad JPA
+├── security/                          # JWT: emisión, filtro de validación, UserDetails
+└── config/SecurityConfig.java         # Cadena de filtros y permisos por ruta
 ```
 
 El nombre del paquete es `com.uade.marketplace`.
+
+## Seguridad
+
+API stateless autenticada con JWT (`Authorization: Bearer <token>`), sin sesión ni CSRF. `JwtAuthenticationFilter`
+valida el token con `JwtService`, carga el usuario con `UsuarioDetailsService` y lo deja en el `SecurityContext`;
+`SecurityConfig` define los permisos por ruta y los roles (`Usuario.rol`: `USUARIO` / `ADMIN` → `ROLE_*`). El
+detalle de qué ruta pide qué está en el README.
 
 ## Base de datos
 
@@ -56,7 +65,9 @@ Se usa Lombok (`@Data`, `@NoArgsConstructor`, `@AllArgsConstructor`). El procesa
 
 ## Testing
 
-Smoke test (`MarketplaceUadeApplicationTests`) y tests de integración de la API (`controller/ProductoControllerIntegrationTest`). Usan Spring Boot Test con JUnit 5 y H2.
+Smoke test (`MarketplaceUadeApplicationTests`), tests de integración de la API (`controller/*IntegrationTest`) y del filtro de JWT y los permisos (`security/SeguridadJwtIntegrationTest`). Usan Spring Boot Test con JUnit 5 y H2.
+
+Las rutas protegidas se prueban con un JWT real: los tests emiten el token con el `JwtService` de la app y lo mandan en el header `Authorization`.
 
 Ejecutar tests: `./mvnw test`
 

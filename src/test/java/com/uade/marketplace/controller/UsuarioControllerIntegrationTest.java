@@ -10,14 +10,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.uade.marketplace.model.Rol;
 import com.uade.marketplace.model.Sexo;
 import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.repository.UsuarioRepository;
+import com.uade.marketplace.security.JwtService;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -37,12 +40,28 @@ class UsuarioControllerIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtService jwtService;
+
     // Crea un usuario directo en la BD con la contrasena ya hasheada, tal como
     // quedaria luego de un registro real.
     private Usuario crearUsuarioEnBD(String nombreUsuario, String mail) {
         Usuario usuario = new Usuario(null, nombreUsuario, mail, passwordEncoder.encode("clave123"), "Juan", "Perez",
-                LocalDate.of(1995, 5, 20), Sexo.MASCULINO);
+                LocalDate.of(1995, 5, 20), Sexo.MASCULINO, Rol.USUARIO);
         return usuarioRepository.save(usuario);
+    }
+
+    // Mismo usuario pero con rol ADMIN: el rol solo se asigna desde la base de
+    // datos, el registro siempre crea usuarios comunes.
+    private Usuario crearAdminEnBD(String nombreUsuario, String mail) {
+        Usuario usuario = new Usuario(null, nombreUsuario, mail, passwordEncoder.encode("clave123"), "Ada", "Admin",
+                LocalDate.of(1990, 1, 10), Sexo.FEMENINO, Rol.ADMIN);
+        return usuarioRepository.save(usuario);
+    }
+
+    // Las rutas protegidas se prueban con un JWT real en el header Authorization.
+    private String bearer(Usuario usuario) {
+        return "Bearer " + jwtService.generarToken(usuario.getMail());
     }
 
     @Test
@@ -203,48 +222,118 @@ class UsuarioControllerIntegrationTest {
     void obtenerUsuarioPorIdExistente() throws Exception {
         Usuario guardado = crearUsuarioEnBD("juan1", "juan@test.com");
 
-        mockMvc.perform(get("/api/usuarios/{id}", guardado.getId()).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(guardado.getId()))
-                .andExpect(jsonPath("$.nombreUsuario").value("juan1"));
+        mockMvc.perform(get("/api/usuarios/{id}", guardado.getId()).header(HttpHeaders.AUTHORIZATION, bearer(guardado))
+                .accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(guardado.getId()))
+                .andExpect(jsonPath("$.nombreUsuario").value("juan1")).andExpect(jsonPath("$.rol").value("USUARIO"));
     }
 
     @Test
     void obtenerUsuarioPorIdInexistente() throws Exception {
-        mockMvc.perform(get("/api/usuarios/{id}", 999L).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+        Usuario guardado = crearUsuarioEnBD("juan1", "juan@test.com");
+
+        mockMvc.perform(get("/api/usuarios/{id}", 999L).header(HttpHeaders.AUTHORIZATION, bearer(guardado))
+                .accept(MediaType.APPLICATION_JSON)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void obtenerUsuarioSinTokenDevuelve401() throws Exception {
+        Usuario guardado = crearUsuarioEnBD("juan1", "juan@test.com");
+
+        mockMvc.perform(get("/api/usuarios/{id}", guardado.getId()).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.status").value(401));
+    }
+
+    @Test
+    void listarUsuariosSoloLoPuedeHacerUnAdmin() throws Exception {
+        Usuario comun = crearUsuarioEnBD("juan1", "juan@test.com");
+
+        mockMvc.perform(get("/api/usuarios").header(HttpHeaders.AUTHORIZATION, bearer(comun))
+                .accept(MediaType.APPLICATION_JSON)).andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
+
+        Usuario admin = crearAdminEnBD("admin1", "admin@test.com");
+
+        mockMvc.perform(get("/api/usuarios").header(HttpHeaders.AUTHORIZATION, bearer(admin))
+                .accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
     }
 
     @Test
     void actualizarUsuarioExistente() throws Exception {
         Usuario guardado = crearUsuarioEnBD("juan1", "juan@test.com");
 
-        mockMvc.perform(put("/api/usuarios/{id}", guardado.getId()).contentType(MediaType.APPLICATION_JSON).content("""
-                {"nombreUsuario":"juan1","mail":"juan@test.com",
-                 "nombre":"Juan Actualizado","apellido":"Perez",
-                 "fechaNacimiento":"1995-05-20","sexo":"MASCULINO"}
-                """)).andExpect(status().isOk()).andExpect(jsonPath("$.nombre").value("Juan Actualizado"));
+        mockMvc.perform(put("/api/usuarios/{id}", guardado.getId()).header(HttpHeaders.AUTHORIZATION, bearer(guardado))
+                .contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nombreUsuario":"juan1","mail":"juan@test.com",
+                         "nombre":"Juan Actualizado","apellido":"Perez",
+                         "fechaNacimiento":"1995-05-20","sexo":"MASCULINO"}
+                        """)).andExpect(status().isOk()).andExpect(jsonPath("$.nombre").value("Juan Actualizado"));
     }
 
     @Test
     void actualizarUsuarioInexistente() throws Exception {
-        mockMvc.perform(put("/api/usuarios/{id}", 999L).contentType(MediaType.APPLICATION_JSON).content("""
-                {"nombreUsuario":"usuarioX","mail":"x@test.com",
-                 "nombre":"X","apellido":"X",
-                 "fechaNacimiento":"1995-05-20","sexo":"OTRO"}
-                """)).andExpect(status().isNotFound());
+        Usuario admin = crearAdminEnBD("admin1", "admin@test.com");
+
+        mockMvc.perform(put("/api/usuarios/{id}", 999L).header(HttpHeaders.AUTHORIZATION, bearer(admin))
+                .contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nombreUsuario":"usuarioX","mail":"x@test.com",
+                         "nombre":"X","apellido":"X",
+                         "fechaNacimiento":"1995-05-20","sexo":"OTRO"}
+                        """)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void actualizarLaCuentaDeOtroUsuarioDevuelve403() throws Exception {
+        Usuario duenio = crearUsuarioEnBD("juan1", "juan@test.com");
+        Usuario otro = crearUsuarioEnBD("otro1", "otro@test.com");
+
+        mockMvc.perform(put("/api/usuarios/{id}", duenio.getId()).header(HttpHeaders.AUTHORIZATION, bearer(otro))
+                .contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nombreUsuario":"juan1","mail":"juan@test.com",
+                         "nombre":"Hackeado","apellido":"Perez",
+                         "fechaNacimiento":"1995-05-20","sexo":"MASCULINO"}
+                        """)).andExpect(status().isForbidden()).andExpect(jsonPath("$.status").value(403));
     }
 
     @Test
     void eliminarUsuarioExistente() throws Exception {
         Usuario guardado = crearUsuarioEnBD("juan1", "juan@test.com");
 
-        mockMvc.perform(delete("/api/usuarios/{id}", guardado.getId())).andExpect(status().isNoContent());
+        mockMvc.perform(
+                delete("/api/usuarios/{id}", guardado.getId()).header(HttpHeaders.AUTHORIZATION, bearer(guardado)))
+                .andExpect(status().isNoContent());
 
         assertFalse(usuarioRepository.existsById(guardado.getId()));
     }
 
     @Test
     void eliminarUsuarioInexistente() throws Exception {
-        mockMvc.perform(delete("/api/usuarios/{id}", 999L)).andExpect(status().isNotFound());
+        Usuario admin = crearAdminEnBD("admin1", "admin@test.com");
+
+        mockMvc.perform(delete("/api/usuarios/{id}", 999L).header(HttpHeaders.AUTHORIZATION, bearer(admin)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void eliminarLaCuentaDeOtroUsuarioDevuelve403() throws Exception {
+        Usuario duenio = crearUsuarioEnBD("juan1", "juan@test.com");
+        Usuario otro = crearUsuarioEnBD("otro1", "otro@test.com");
+
+        mockMvc.perform(delete("/api/usuarios/{id}", duenio.getId()).header(HttpHeaders.AUTHORIZATION, bearer(otro)))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.status").value(403));
+
+        assertTrue(usuarioRepository.existsById(duenio.getId()));
+    }
+
+    @Test
+    void unAdminPuedeEliminarLaCuentaDeOtroUsuario() throws Exception {
+        Usuario duenio = crearUsuarioEnBD("juan1", "juan@test.com");
+        Usuario admin = crearAdminEnBD("admin1", "admin@test.com");
+
+        mockMvc.perform(delete("/api/usuarios/{id}", duenio.getId()).header(HttpHeaders.AUTHORIZATION, bearer(admin)))
+                .andExpect(status().isNoContent());
+
+        assertFalse(usuarioRepository.existsById(duenio.getId()));
     }
 }
