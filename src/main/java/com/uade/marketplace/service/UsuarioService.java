@@ -23,10 +23,10 @@ public class UsuarioService {
     private final JwtService jwtService;
 
     public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
-    this.usuarioRepository = usuarioRepository;
-    this.passwordEncoder = passwordEncoder;
-    this.jwtService = jwtService;
-}
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+    }
 
     public List<UsuarioResponseDTO> getAllUsuarios() {
         List<Usuario> usuarios = usuarioRepository.findAll();

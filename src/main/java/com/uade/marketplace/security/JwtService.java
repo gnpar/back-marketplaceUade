@@ -22,11 +22,8 @@ public class JwtService {
     }
 
     public String generarToken(String mail) {
-        return Jwts.builder()
-                .setSubject(mail)
-                .setIssuedAt(new Date())
+        return Jwts.builder().setSubject(mail).setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
     }
 }
