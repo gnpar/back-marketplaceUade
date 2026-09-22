@@ -1,6 +1,7 @@
 package com.uade.marketplace.controller;
 
 import com.uade.marketplace.dto.LoginRequestDTO;
+import com.uade.marketplace.dto.LoginResponseDTO;
 import com.uade.marketplace.dto.UsuarioRequestDTO;
 import com.uade.marketplace.dto.UsuarioResponseDTO;
 import com.uade.marketplace.service.UsuarioService;
@@ -52,7 +53,7 @@ public class UsuarioController {
 
     // post http://localhost:8080/api/usuarios/login
     @PostMapping("/login")
-    public ResponseEntity<UsuarioResponseDTO> login(@RequestBody LoginRequestDTO loginDTO) {
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginDTO) {
         return ResponseEntity.ok(usuarioService.login(loginDTO));
     }
 
