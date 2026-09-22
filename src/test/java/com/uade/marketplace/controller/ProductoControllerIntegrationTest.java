@@ -79,7 +79,7 @@ class ProductoControllerIntegrationTest {
     @Test
     void crearProductoSinAutenticacionDevuelve401() throws Exception {
         mockMvc.perform(post("/api/productos").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"categoriaId\":"
+                "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"stock\":10,\"categoriaId\":"
                         + categoriaId + "}"))
                 .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.status").value(401));
     }
@@ -88,7 +88,7 @@ class ProductoControllerIntegrationTest {
     void crearProductoAsignaElUsuarioAutenticadoComoVendedor() throws Exception {
         mockMvc.perform(post("/api/productos").header(HttpHeaders.AUTHORIZATION, bearer(vendedor))
                 .contentType(MediaType.APPLICATION_JSON).content(
-                        "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"categoriaId\":"
+                        "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"stock\":10,\"categoriaId\":"
                                 + categoriaId + "}"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.nombre").value("Mouse"))
@@ -101,7 +101,7 @@ class ProductoControllerIntegrationTest {
     void crearProductoConUsuarioInexistenteDevuelve401() throws Exception {
         mockMvc.perform(post("/api/productos").header(HttpHeaders.AUTHORIZATION, bearerDeMail("nadie@test.com"))
                 .contentType(MediaType.APPLICATION_JSON).content(
-                        "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"categoriaId\":"
+                        "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"stock\":10,\"categoriaId\":"
                                 + categoriaId + "}"))
                 .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.status").value(401));
     }
@@ -138,7 +138,7 @@ class ProductoControllerIntegrationTest {
 
         mockMvc.perform(put("/api/productos/{id}", producto.getId()).header(HttpHeaders.AUTHORIZATION, bearer(vendedor))
                 .contentType(MediaType.APPLICATION_JSON).content(
-                        "{\"nombre\":\"Monitor 4K\",\"descripcion\":\"Monitor 32 pulgadas 4K\",\"precio\":450000.00,\"categoriaId\":"
+                        "{\"nombre\":\"Monitor 4K\",\"descripcion\":\"Monitor 32 pulgadas 4K\",\"precio\":450000.00,\"stock\":10,\"categoriaId\":"
                                 + categoriaId + "}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(producto.getId()))
                 .andExpect(jsonPath("$.nombre").value("Monitor 4K"))
@@ -155,7 +155,7 @@ class ProductoControllerIntegrationTest {
 
         mockMvc.perform(put("/api/productos/{id}", producto.getId()).header(HttpHeaders.AUTHORIZATION, bearer(otro))
                 .contentType(MediaType.APPLICATION_JSON).content(
-                        "{\"nombre\":\"Monitor 4K\",\"descripcion\":\"Monitor 32 pulgadas 4K\",\"precio\":450000.00,\"categoriaId\":"
+                        "{\"nombre\":\"Monitor 4K\",\"descripcion\":\"Monitor 32 pulgadas 4K\",\"precio\":450000.00,\"stock\":10,\"categoriaId\":"
                                 + categoriaId + "}"))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.status").value(403));
     }
@@ -164,7 +164,7 @@ class ProductoControllerIntegrationTest {
     void actualizarProductoInexistente() throws Exception {
         mockMvc.perform(put("/api/productos/{id}", 999L).header(HttpHeaders.AUTHORIZATION, bearer(vendedor))
                 .contentType(MediaType.APPLICATION_JSON).content(
-                        "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"categoriaId\":"
+                        "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"stock\":10,\"categoriaId\":"
                                 + categoriaId + "}"))
                 .andExpect(status().isNotFound());
     }
@@ -216,12 +216,12 @@ class ProductoControllerIntegrationTest {
 
         mockMvc.perform(post("/api/productos").header(HttpHeaders.AUTHORIZATION, bearer(vendedor))
                 .contentType(MediaType.APPLICATION_JSON).content(
-                        "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"categoriaId\":"
+                        "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"stock\":10,\"categoriaId\":"
                                 + categoriaId + "}"))
                 .andExpect(status().isCreated());
         mockMvc.perform(post("/api/productos").header(HttpHeaders.AUTHORIZATION, bearer(vendedor))
                 .contentType(MediaType.APPLICATION_JSON).content(
-                        "{\"nombre\":\"Zapatillas\",\"descripcion\":\"Zapatillas deportivas\",\"precio\":50000.00,\"categoriaId\":"
+                        "{\"nombre\":\"Zapatillas\",\"descripcion\":\"Zapatillas deportivas\",\"precio\":50000.00,\"stock\":10,\"categoriaId\":"
                                 + otraCategoriaId + "}"))
                 .andExpect(status().isCreated());
 
@@ -274,7 +274,7 @@ class ProductoControllerIntegrationTest {
     void crearProductoConCategoriaInexistente() throws Exception {
         mockMvc.perform(post("/api/productos").header(HttpHeaders.AUTHORIZATION, bearer(vendedor))
                 .contentType(MediaType.APPLICATION_JSON).content(
-                        "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"categoriaId\":999}"))
+                        "{\"nombre\":\"Mouse\",\"descripcion\":\"Mouse inalámbrico\",\"precio\":15000.00,\"stock\":10,\"categoriaId\":999}"))
                 .andExpect(status().isNotFound());
     }
 

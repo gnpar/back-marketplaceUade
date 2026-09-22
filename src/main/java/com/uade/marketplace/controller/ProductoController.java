@@ -5,6 +5,8 @@ import com.uade.marketplace.dto.ProductoResponseDTO;
 import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.service.ProductoService;
 import com.uade.marketplace.service.UsuarioService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import java.security.Principal;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -37,20 +39,22 @@ public class ProductoController {
     // get http://localhost:8080/api/productos?usuarioId=1
     // get http://localhost:8080/api/productos?categoriaId=1&usuarioId=1
     @GetMapping()
-    public ResponseEntity<List<ProductoResponseDTO>> getAllProductos(@RequestParam(required = false) Long categoriaId,
-            @RequestParam(required = false) Long usuarioId) {
+    public ResponseEntity<List<ProductoResponseDTO>> getAllProductos(
+            @RequestParam(required = false) @Positive(message = "El identificador debe ser mayor a cero") Long categoriaId,
+            @RequestParam(required = false) @Positive(message = "El identificador debe ser mayor a cero") Long usuarioId) {
         return ResponseEntity.ok(productoService.getProductos(categoriaId, usuarioId));
     }
 
     // get http://localhost:8080/api/productos/1
     @GetMapping("/{id}")
-    public ResponseEntity<ProductoResponseDTO> getProductoById(@PathVariable Long id) {
+    public ResponseEntity<ProductoResponseDTO> getProductoById(
+            @PathVariable @Positive(message = "El identificador debe ser mayor a cero") Long id) {
         return ResponseEntity.ok(productoService.getProductoById(id));
     }
 
     // post http://localhost:8080/api/productos (usuario autenticado = vendedor)
     @PostMapping()
-    public ResponseEntity<ProductoResponseDTO> crearProducto(@RequestBody ProductoRequestDTO productoDTO,
+    public ResponseEntity<ProductoResponseDTO> crearProducto(@Valid @RequestBody ProductoRequestDTO productoDTO,
             Principal principal) {
         Usuario usuario = usuarioService.obtenerAutenticado(principal);
         ProductoResponseDTO creado = productoService.crearProducto(productoDTO, usuario.getId());
@@ -59,8 +63,9 @@ public class ProductoController {
 
     // put http://localhost:8080/api/productos/1 (solo el vendedor que lo creo)
     @PutMapping("/{id}")
-    public ResponseEntity<ProductoResponseDTO> actualizarProducto(@PathVariable Long id,
-            @RequestBody ProductoRequestDTO productoDTO, Principal principal) {
+    public ResponseEntity<ProductoResponseDTO> actualizarProducto(
+            @PathVariable @Positive(message = "El identificador debe ser mayor a cero") Long id,
+            @Valid @RequestBody ProductoRequestDTO productoDTO, Principal principal) {
         Usuario usuario = usuarioService.obtenerAutenticado(principal);
         ProductoResponseDTO actualizado = productoService.actualizarProducto(id, productoDTO, usuario.getId());
         return ResponseEntity.ok(actualizado);
@@ -68,7 +73,8 @@ public class ProductoController {
 
     // delete http://localhost:8080/api/productos/1 (solo el vendedor que lo creo)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id, Principal principal) {
+    public ResponseEntity<Void> eliminarProducto(
+            @PathVariable @Positive(message = "El identificador debe ser mayor a cero") Long id, Principal principal) {
         Usuario usuario = usuarioService.obtenerAutenticado(principal);
         productoService.eliminarProducto(id, usuario.getId());
         return ResponseEntity.noContent().build();

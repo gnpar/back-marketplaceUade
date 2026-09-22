@@ -162,3 +162,30 @@ administrador se promueve un usuario desde la base:
 ```sql
 UPDATE usuarios SET rol = 'ADMIN' WHERE mail = 'admin@test.com';
 ```
+
+## Validaciones y respuestas de error
+
+Los controllers validan los DTO antes de ejecutar los servicios. Productos requieren nombre y descripcion
+no vacios (hasta 255 caracteres), precio y stock no negativos, y una categoria con identificador positivo.
+El stock debe enviarse tanto al crear como al actualizar. Categorias requieren un nombre no vacio de hasta
+255 caracteres. El carrito requiere un producto con identificador positivo y una cantidad positiva si se
+envia; al omitir la cantidad, sigue usando uno. El login requiere mail valido y contrasena no vacia.
+Los identificadores de rutas y filtros, cuando se envian, deben ser positivos.
+
+Los errores conservan el contrato `status`, `mensaje` y `timestamp` de `ErrorResponseDTO`:
+
+| Codigo | Situacion |
+| --- | --- |
+| 400 | Campos invalidos, JSON mal formado, cuerpo ausente o parametros con tipos incorrectos |
+| 401 / 403 | Autenticacion o permisos insuficientes; los filtros JWT mantienen sus handlers |
+| 404 | Recurso inexistente |
+| 405 / 415 | Metodo HTTP o tipo de contenido no soportado |
+| 409 | Duplicados o conflictos de integridad con datos relacionados |
+| 500 | Fallo inesperado: mensaje generico al cliente y detalle en el log del servidor |
+
+`GlobalExceptionHandler` extiende `ResponseEntityExceptionHandler` para conservar los codigos y headers
+HTTP de Spring y unificar el cuerpo de las respuestas. Las excepciones propias de cada categoria siguen
+usando sus codigos. Las validaciones de campos indican el campo y el motivo en `mensaje`.
+
+Pruebas nuevas: `ValidacionesIntegrationTest` y `GlobalExceptionHandlerTest`. Se ejecutan con el resto de
+la suite mediante `./mvnw test` (en CMD: `mvnw.cmd test`). Verificar formato con `./mvnw spotless:check`.

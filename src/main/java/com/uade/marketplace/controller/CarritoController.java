@@ -5,6 +5,8 @@ import com.uade.marketplace.dto.CarritoItemResponseDTO;
 import com.uade.marketplace.dto.CheckoutResponseDTO;
 import com.uade.marketplace.service.CarritoService;
 import com.uade.marketplace.service.UsuarioService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import java.security.Principal;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -38,7 +40,7 @@ public class CarritoController {
 
     // post http://localhost:8080/api/carrito
     @PostMapping()
-    public ResponseEntity<CarritoItemResponseDTO> agregarItem(@RequestBody CarritoItemRequestDTO itemDTO,
+    public ResponseEntity<CarritoItemResponseDTO> agregarItem(@Valid @RequestBody CarritoItemRequestDTO itemDTO,
             Principal principal) {
         CarritoItemResponseDTO agregado = carritoService.agregarItem(itemDTO, usuarioId(principal));
         return ResponseEntity.status(HttpStatus.CREATED).body(agregado);
@@ -46,7 +48,9 @@ public class CarritoController {
 
     // delete http://localhost:8080/api/carrito/items/5
     @DeleteMapping("/items/{itemId}")
-    public ResponseEntity<Void> quitarItem(@PathVariable Long itemId, Principal principal) {
+    public ResponseEntity<Void> quitarItem(
+            @PathVariable @Positive(message = "El identificador debe ser mayor a cero") Long itemId,
+            Principal principal) {
         carritoService.quitarItem(usuarioId(principal), itemId);
         return ResponseEntity.noContent().build();
     }

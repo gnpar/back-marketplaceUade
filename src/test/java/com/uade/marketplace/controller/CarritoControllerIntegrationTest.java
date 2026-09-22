@@ -137,7 +137,7 @@ class CarritoControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":0}")).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.mensaje").value("La cantidad debe ser mayor a 0"));
+                .andExpect(jsonPath("$.mensaje").value("cantidad: La cantidad debe ser mayor a cero"));
     }
 
     @Test
