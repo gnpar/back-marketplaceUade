@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.uade.marketplace.model.CarritoItem;
 import com.uade.marketplace.model.Producto;
 import com.uade.marketplace.model.Sexo;
 import com.uade.marketplace.model.Usuario;
@@ -40,29 +41,39 @@ class CarritoControllerIntegrationTest {
     @Autowired
     private CarritoItemRepository carritoItemRepository;
 
-    private Usuario usuario;
+    private Usuario comprador;
+
+    private Usuario vendedor;
 
     private Producto producto;
 
     @BeforeEach
     void setUp() {
-        usuario = usuarioRepository.save(new Usuario(null, "juanperez", "juan@test.com", "clave123", "Juan", "Perez",
+        comprador = crearUsuarioEnBD("juanperez", "juan@test.com");
+        vendedor = crearUsuarioEnBD("vendedor1", "vendedor@test.com");
+        producto = productoRepository
+                .save(new Producto(null, "Mouse", "Mouse inalámbrico", 15000.00, 10, vendedor, null));
+    }
+
+    // Crea un usuario directo en la BD (no pasa por el registro).
+    private Usuario crearUsuarioEnBD(String nombreUsuario, String mail) {
+        return usuarioRepository.save(new Usuario(null, nombreUsuario, mail, "clave123", "Juan", "Perez",
                 LocalDate.of(2000, 1, 1), Sexo.MASCULINO));
-        producto = productoRepository.save(new Producto(null, "Mouse", "Mouse inalámbrico", 15000.00, 10, null, null));
     }
 
     @Test
     void carritoVacioDevuelveListaVacia() throws Exception {
-        mockMvc.perform(get("/api/carrito/{usuarioId}", usuario.getId()).accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/api/carrito").principal(() -> comprador.getMail()).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$").isEmpty());
     }
 
     @Test
     void agregarItemCreaItem() throws Exception {
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":2}"))
+        mockMvc.perform(
+                post("/api/carrito").principal(() -> comprador.getMail()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":2}"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.usuarioId").value(usuario.getId()))
+                .andExpect(jsonPath("$.usuarioId").value(comprador.getId()))
                 .andExpect(jsonPath("$.productoId").value(producto.getId()))
                 .andExpect(jsonPath("$.nombreProducto").value("Mouse")).andExpect(jsonPath("$.precio").value(15000.00))
                 .andExpect(jsonPath("$.cantidad").value(2));
@@ -70,62 +81,81 @@ class CarritoControllerIntegrationTest {
 
     @Test
     void agregarItemSinCantidadUsaUno() throws Exception {
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + "}"))
+        mockMvc.perform(post("/api/carrito").principal(() -> comprador.getMail())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"productoId\":" + producto.getId() + "}"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.cantidad").value(1));
     }
 
     @Test
     void agregarItemExistenteIncrementaCantidad() throws Exception {
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":2}"))
+        mockMvc.perform(
+                post("/api/carrito").principal(() -> comprador.getMail()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":2}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":3}"))
+        mockMvc.perform(
+                post("/api/carrito").principal(() -> comprador.getMail()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":3}"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.cantidad").value(5));
 
-        mockMvc.perform(get("/api/carrito/{usuarioId}", usuario.getId()).accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/api/carrito").principal(() -> comprador.getMail()).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
     }
 
     @Test
-    void agregarItemConUsuarioInexistenteDevuelve404() throws Exception {
+    void agregarItemSinAutenticacionDevuelve401() throws Exception {
         mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"usuarioId\":999,\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
-                .andExpect(status().isNotFound()).andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.mensaje").value("Usuario con ID 999 no encontrado"));
+                .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
+                .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.status").value(401));
+    }
+
+    @Test
+    void agregarItemConUsuarioInexistenteDevuelve401() throws Exception {
+        mockMvc.perform(post("/api/carrito").principal(() -> "nadie@test.com").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
+                .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.status").value(401));
     }
 
     @Test
     void agregarItemConProductoInexistenteDevuelve404() throws Exception {
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"usuarioId\":" + usuario.getId() + ",\"productoId\":999,\"cantidad\":1}"))
+        mockMvc.perform(post("/api/carrito").principal(() -> comprador.getMail())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"productoId\":999,\"cantidad\":1}"))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.mensaje").value("Producto con ID 999 no encontrado"));
     }
 
     @Test
     void agregarItemConCantidadInvalidaDevuelve400() throws Exception {
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":0}"))
+        mockMvc.perform(
+                post("/api/carrito").principal(() -> comprador.getMail()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":0}"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.mensaje").value("La cantidad debe ser mayor a 0"));
     }
 
     @Test
+    void agregarProductoPropioDevuelve400() throws Exception {
+        mockMvc.perform(post("/api/carrito").principal(() -> vendedor.getMail()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":1}")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400)).andExpect(jsonPath("$.mensaje")
+                        .value("No podés comprar tu propio producto (ID " + producto.getId() + ")"));
+    }
+
+    @Test
     void listarCarritoConItems() throws Exception {
         Producto otroProducto = productoRepository
-                .save(new Producto(null, "Teclado", "Teclado mecánico", 45000.00, 10, null, null));
+                .save(new Producto(null, "Teclado", "Teclado mecánico", 45000.00, 10, vendedor, null));
 
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
+        mockMvc.perform(
+                post("/api/carrito").principal(() -> comprador.getMail()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
                 .andExpect(status().isCreated());
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + otroProducto.getId() + ",\"cantidad\":1}"))
+        mockMvc.perform(
+                post("/api/carrito").principal(() -> comprador.getMail()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\":" + otroProducto.getId() + ",\"cantidad\":1}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/carrito/{usuarioId}", usuario.getId()).accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/api/carrito").principal(() -> comprador.getMail()).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].nombreProducto").value("Mouse"))
                 .andExpect(jsonPath("$[1].nombreProducto").value("Teclado"));
@@ -133,13 +163,14 @@ class CarritoControllerIntegrationTest {
 
     @Test
     void quitarItemExistente() throws Exception {
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
+        mockMvc.perform(
+                post("/api/carrito").principal(() -> comprador.getMail()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
                 .andExpect(status().isCreated());
 
-        Long itemId = carritoItemRepository.findByUsuarioId(usuario.getId()).get(0).getId();
+        Long itemId = carritoItemRepository.findByUsuarioId(comprador.getId()).get(0).getId();
 
-        mockMvc.perform(delete("/api/carrito/{usuarioId}/items/{itemId}", usuario.getId(), itemId))
+        mockMvc.perform(delete("/api/carrito/items/{itemId}", itemId).principal(() -> comprador.getMail()))
                 .andExpect(status().isNoContent());
 
         assertThat(carritoItemRepository.existsById(itemId)).isFalse();
@@ -147,23 +178,23 @@ class CarritoControllerIntegrationTest {
 
     @Test
     void quitarItemInexistenteDevuelve404() throws Exception {
-        mockMvc.perform(delete("/api/carrito/{usuarioId}/items/{itemId}", usuario.getId(), 999L))
+        mockMvc.perform(delete("/api/carrito/items/{itemId}", 999L).principal(() -> comprador.getMail()))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.mensaje").value("Item del carrito con ID 999 no encontrado"));
     }
 
     @Test
     void quitarItemDeOtroUsuarioDevuelve403() throws Exception {
-        Usuario otro = usuarioRepository.save(new Usuario(null, "otrousuario", "otro@test.com", "clave456", "Otro",
-                "Usuario", LocalDate.of(1999, 5, 5), Sexo.MASCULINO));
+        Usuario otro = crearUsuarioEnBD("otrousuario", "otro@test.com");
 
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
+        mockMvc.perform(
+                post("/api/carrito").principal(() -> comprador.getMail()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
                 .andExpect(status().isCreated());
 
-        Long itemId = carritoItemRepository.findByUsuarioId(usuario.getId()).get(0).getId();
+        Long itemId = carritoItemRepository.findByUsuarioId(comprador.getId()).get(0).getId();
 
-        mockMvc.perform(delete("/api/carrito/{usuarioId}/items/{itemId}", otro.getId(), itemId))
+        mockMvc.perform(delete("/api/carrito/items/{itemId}", itemId).principal(() -> otro.getMail()))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.status").value(403));
 
         assertThat(carritoItemRepository.findById(itemId)).isPresent();
@@ -172,39 +203,41 @@ class CarritoControllerIntegrationTest {
     @Test
     void vaciarCarritoEliminaTodosLosItems() throws Exception {
         Producto otroProducto = productoRepository
-                .save(new Producto(null, "Teclado", "Teclado mecánico", 45000.00, 10, null, null));
+                .save(new Producto(null, "Teclado", "Teclado mecánico", 45000.00, 10, vendedor, null));
 
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
+        mockMvc.perform(
+                post("/api/carrito").principal(() -> comprador.getMail()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":1}"))
                 .andExpect(status().isCreated());
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + otroProducto.getId() + ",\"cantidad\":2}"))
+        mockMvc.perform(
+                post("/api/carrito").principal(() -> comprador.getMail()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\":" + otroProducto.getId() + ",\"cantidad\":2}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(delete("/api/carrito/{usuarioId}", usuario.getId())).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/carrito").principal(() -> comprador.getMail())).andExpect(status().isNoContent());
 
-        assertThat(carritoItemRepository.findByUsuarioId(usuario.getId())).isEmpty();
+        assertThat(carritoItemRepository.findByUsuarioId(comprador.getId())).isEmpty();
     }
 
     @Test
-    void vaciarCarritoDeUsuarioInexistenteDevuelve404() throws Exception {
-        mockMvc.perform(delete("/api/carrito/{usuarioId}", 999L)).andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.mensaje").value("Usuario con ID 999 no encontrado"));
+    void vaciarCarritoConUsuarioInexistenteDevuelve401() throws Exception {
+        mockMvc.perform(delete("/api/carrito").principal(() -> "nadie@test.com")).andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
     }
 
     @Test
     void checkoutCalculaTotalYDescuentaStock() throws Exception {
         // Agrego 2 unidades del mouse (precio 15000, stock inicial 10)
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + producto.getId() + ",\"cantidad\":2}"))
+        mockMvc.perform(
+                post("/api/carrito").principal(() -> comprador.getMail()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":2}"))
                 .andExpect(status().isCreated());
 
         // Checkout: total esperado = 15000 * 2 = 30000
-        mockMvc.perform(post("/api/carrito/{usuarioId}/checkout", usuario.getId())).andExpect(status().isOk())
-                .andExpect(jsonPath("$.pedidoId").isNumber()).andExpect(jsonPath("$.usuarioId").value(usuario.getId()))
-                .andExpect(jsonPath("$.fecha").isNotEmpty()).andExpect(jsonPath("$.total").value(30000.00))
-                .andExpect(jsonPath("$.items.length()").value(1))
+        mockMvc.perform(post("/api/carrito/checkout").principal(() -> comprador.getMail())).andExpect(status().isOk())
+                .andExpect(jsonPath("$.pedidoId").isNumber())
+                .andExpect(jsonPath("$.usuarioId").value(comprador.getId())).andExpect(jsonPath("$.fecha").isNotEmpty())
+                .andExpect(jsonPath("$.total").value(30000.00)).andExpect(jsonPath("$.items.length()").value(1))
                 .andExpect(jsonPath("$.items[0].nombreProducto").value("Mouse"))
                 .andExpect(jsonPath("$.items[0].cantidad").value(2))
                 .andExpect(jsonPath("$.items[0].precioUnitario").value(15000.00));
@@ -213,24 +246,25 @@ class CarritoControllerIntegrationTest {
         assertThat(productoRepository.findById(producto.getId()).get().getStock()).isEqualTo(8);
 
         // El carrito debe quedar vacío
-        assertThat(carritoItemRepository.findByUsuarioId(usuario.getId())).isEmpty();
+        assertThat(carritoItemRepository.findByUsuarioId(comprador.getId())).isEmpty();
     }
 
     @Test
     void checkoutConCarritoVacioDevuelve400() throws Exception {
-        mockMvc.perform(post("/api/carrito/{usuarioId}/checkout", usuario.getId())).andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400));
+        mockMvc.perform(post("/api/carrito/checkout").principal(() -> comprador.getMail()))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.status").value(400));
     }
 
     @Test
     void checkoutConStockInsuficienteDevuelve400() throws Exception {
         // Producto con stock 1
         Producto pocoStock = productoRepository
-                .save(new Producto(null, "Webcam", "Webcam HD", 20000.00, 1, null, null));
+                .save(new Producto(null, "Webcam", "Webcam HD", 20000.00, 1, vendedor, null));
 
         // Agrego 1 unidad al carrito (permitido, hay stock)
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + pocoStock.getId() + ",\"cantidad\":1}"))
+        mockMvc.perform(
+                post("/api/carrito").principal(() -> comprador.getMail()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\":" + pocoStock.getId() + ",\"cantidad\":1}"))
                 .andExpect(status().isCreated());
 
         // Reduzco el stock del producto a 0 por fuera (simula que otro lo compró antes
@@ -239,19 +273,33 @@ class CarritoControllerIntegrationTest {
         productoRepository.save(pocoStock);
 
         // Checkout debe fallar por falta de stock
-        mockMvc.perform(post("/api/carrito/{usuarioId}/checkout", usuario.getId())).andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400));
+        mockMvc.perform(post("/api/carrito/checkout").principal(() -> comprador.getMail()))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void checkoutConProductoPropioDevuelve400() throws Exception {
+        // El comprador tiene en el carrito (cargado por fuera) un producto propio
+        Producto productoPropio = productoRepository
+                .save(new Producto(null, "MiTeclado", "Mi teclado", 45000.00, 5, comprador, null));
+        carritoItemRepository.save(new CarritoItem(null, comprador, productoPropio, 1));
+
+        mockMvc.perform(post("/api/carrito/checkout").principal(() -> comprador.getMail()))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.mensaje")
+                        .value("No podés comprar tu propio producto (ID " + productoPropio.getId() + ")"));
     }
 
     @Test
     void agregarItemSinStockSuficienteDevuelve400() throws Exception {
         // Producto con stock 2
         Producto pocoStock = productoRepository
-                .save(new Producto(null, "Parlante", "Parlante bluetooth", 30000.00, 2, null, null));
+                .save(new Producto(null, "Parlante", "Parlante bluetooth", 30000.00, 2, vendedor, null));
 
         // Intento agregar 5 unidades: no hay stock suficiente
-        mockMvc.perform(post("/api/carrito").contentType(MediaType.APPLICATION_JSON).content(
-                "{\"usuarioId\":" + usuario.getId() + ",\"productoId\":" + pocoStock.getId() + ",\"cantidad\":5}"))
+        mockMvc.perform(
+                post("/api/carrito").principal(() -> comprador.getMail()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\":" + pocoStock.getId() + ",\"cantidad\":5}"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.status").value(400));
     }
 

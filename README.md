@@ -108,8 +108,12 @@ Base: `http://localhost:8080/api/productos`
 
 | Método | Ruta | Descripción |
 | --- | --- | --- |
-| GET | `/api/productos` | Listar todos los productos |
+| GET | `/api/productos` | Listar todos los productos. Filtros opcionales: `?categoriaId=` y/o `?usuarioId=` (vendedor) |
 | GET | `/api/productos/{id}` | Obtener producto por ID |
-| POST | `/api/productos` | Crear producto |
-| PUT | `/api/productos/{id}` | Actualizar producto (404 si no existe) |
-| DELETE | `/api/productos/{id}` | Eliminar producto (204 si se elimina, 404 si no existe) |
+| POST | `/api/productos` | Crear producto. Requiere usuario autenticado: queda registrado como vendedor |
+| PUT | `/api/productos/{id}` | Actualizar producto (404 si no existe; 403 si no lo creó el usuario autenticado) |
+| DELETE | `/api/productos/{id}` | Eliminar producto (204 si se elimina; 403 si no lo creó el usuario autenticado; 404 si no existe) |
+
+> **Autenticación**: los endpoints de escritura (POST/PUT/DELETE de `/api/productos` y todo `/api/carrito`)
+> resuelven el usuario a partir del `Principal` (mail = subject del JWT). Hasta que se implemente el filtro de
+> validación del JWT, los tests lo simulan con `MockMvc.principal(...)`; sin `Principal` devuelven 401.

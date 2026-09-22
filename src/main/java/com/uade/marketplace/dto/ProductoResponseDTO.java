@@ -14,5 +14,6 @@ public class ProductoResponseDTO {
     private Double precio;
     private Integer stock;
     private Long categoriaId;
+    private Long usuarioId;
 
 }

@@ -48,15 +48,19 @@ public class CarritoService {
         return dtos;
     }
 
-    public CarritoItemResponseDTO agregarItem(CarritoItemRequestDTO itemDTO) {
-        Usuario usuario = usuarioRepository.findById(itemDTO.getUsuarioId())
-                .orElseThrow(() -> UsuarioException.noEncontrado(itemDTO.getUsuarioId()));
+    public CarritoItemResponseDTO agregarItem(CarritoItemRequestDTO itemDTO, Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> UsuarioException.noEncontrado(usuarioId));
         Producto producto = productoRepository.findById(itemDTO.getProductoId())
                 .orElseThrow(() -> ProductoException.noEncontrado(itemDTO.getProductoId()));
 
         int cantidad = itemDTO.getCantidad() != null ? itemDTO.getCantidad() : 1;
         if (cantidad <= 0) {
             throw CarritoException.cantidadInvalida();
+        }
+
+        if (producto.getUsuario().getId().equals(usuario.getId())) {
+            throw CarritoException.productoPropio(producto.getId());
         }
 
         CarritoItem item = carritoItemRepository.findByUsuarioIdAndProductoId(usuario.getId(), producto.getId())
@@ -121,6 +125,9 @@ public class CarritoService {
             Producto producto = item.getProducto();
             if (producto.getStock() == null || producto.getStock() < item.getCantidad()) {
                 throw ProductoException.sinStock(producto.getId());
+            }
+            if (producto.getUsuario().getId().equals(usuarioId)) {
+                throw CarritoException.productoPropio(producto.getId());
             }
         }
 

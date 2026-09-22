@@ -2,7 +2,10 @@ package com.uade.marketplace.controller;
 
 import com.uade.marketplace.dto.ProductoRequestDTO;
 import com.uade.marketplace.dto.ProductoResponseDTO;
+import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.service.ProductoService;
+import com.uade.marketplace.service.UsuarioService;
+import java.security.Principal;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,19 +25,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProductoController {
 
     private final ProductoService productoService;
+    private final UsuarioService usuarioService;
 
-    ProductoController(ProductoService productoService) {
+    ProductoController(ProductoService productoService, UsuarioService usuarioService) {
         this.productoService = productoService;
+        this.usuarioService = usuarioService;
     }
 
     // get http://localhost:8080/api/productos
     // get http://localhost:8080/api/productos?categoriaId=1
+    // get http://localhost:8080/api/productos?usuarioId=1
+    // get http://localhost:8080/api/productos?categoriaId=1&usuarioId=1
     @GetMapping()
-    public ResponseEntity<List<ProductoResponseDTO>> getAllProductos(@RequestParam(required = false) Long categoriaId) {
-        if (categoriaId != null) {
-            return ResponseEntity.ok(productoService.getProductosByCategoria(categoriaId));
-        }
-        return ResponseEntity.ok(productoService.getAllProductos());
+    public ResponseEntity<List<ProductoResponseDTO>> getAllProductos(@RequestParam(required = false) Long categoriaId,
+            @RequestParam(required = false) Long usuarioId) {
+        return ResponseEntity.ok(productoService.getProductos(categoriaId, usuarioId));
     }
 
     // get http://localhost:8080/api/productos/1
@@ -43,25 +48,29 @@ public class ProductoController {
         return ResponseEntity.ok(productoService.getProductoById(id));
     }
 
-    // post http://localhost:8080/api/productos
+    // post http://localhost:8080/api/productos (usuario autenticado = vendedor)
     @PostMapping()
-    public ResponseEntity<ProductoResponseDTO> crearProducto(@RequestBody ProductoRequestDTO productoDTO) {
-        ProductoResponseDTO creado = productoService.crearProducto(productoDTO);
+    public ResponseEntity<ProductoResponseDTO> crearProducto(@RequestBody ProductoRequestDTO productoDTO,
+            Principal principal) {
+        Usuario usuario = usuarioService.obtenerAutenticado(principal);
+        ProductoResponseDTO creado = productoService.crearProducto(productoDTO, usuario.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
-    // put http://localhost:8080/api/productos/1
+    // put http://localhost:8080/api/productos/1 (solo el vendedor que lo creo)
     @PutMapping("/{id}")
     public ResponseEntity<ProductoResponseDTO> actualizarProducto(@PathVariable Long id,
-            @RequestBody ProductoRequestDTO productoDTO) {
-        ProductoResponseDTO actualizado = productoService.actualizarProducto(id, productoDTO);
+            @RequestBody ProductoRequestDTO productoDTO, Principal principal) {
+        Usuario usuario = usuarioService.obtenerAutenticado(principal);
+        ProductoResponseDTO actualizado = productoService.actualizarProducto(id, productoDTO, usuario.getId());
         return ResponseEntity.ok(actualizado);
     }
 
-    // delete http://localhost:8080/api/productos/1
+    // delete http://localhost:8080/api/productos/1 (solo el vendedor que lo creo)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id) {
-        productoService.eliminarProducto(id);
+    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id, Principal principal) {
+        Usuario usuario = usuarioService.obtenerAutenticado(principal);
+        productoService.eliminarProducto(id, usuario.getId());
         return ResponseEntity.noContent().build();
     }
 }

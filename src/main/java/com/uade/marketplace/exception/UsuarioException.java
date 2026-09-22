@@ -32,6 +32,10 @@ public class UsuarioException extends RuntimeException {
         return new UsuarioException(mensaje, HttpStatus.BAD_REQUEST);
     }
 
+    public static UsuarioException noAutenticado() {
+        return new UsuarioException("Usuario no autenticado", HttpStatus.UNAUTHORIZED);
+    }
+
     public HttpStatus getStatus() {
         return status;
     }

@@ -2,8 +2,13 @@
 # Archivo de referencia de solicitudes al servicio desarrollado.
 # Para pruebas rápidas
 #
+# Nota: los endpoints de escritura (POST/PUT/DELETE de productos y el carrito)
+# requieren usuario autenticado. El backend resuelve el usuario desde el
+# Principal (mail del JWT); hasta que exista el filtro de validacion del JWT,
+# estas llamadas devuelven 401 sin autenticacion.
+#
 
-### Crear un producto
+### Crear un producto (requiere autenticacion)
 
 POST http://localhost:8080/api/productos
 Content-Type: application/json
@@ -11,7 +16,8 @@ Content-Type: application/json
 {
   "nombre": "Notebook Dell",
   "descripcion": "Notebook Dell Inspiron 15 pulgadas",
-  "precio": 899999.99
+  "precio": 899999.99,
+  "categoriaId": 1
 }
 
 ### Obtener todos los productos
@@ -19,12 +25,17 @@ Content-Type: application/json
 GET http://localhost:8080/api/productos
 Accept: application/json
 
+### Obtener productos de un vendedor
+
+GET http://localhost:8080/api/productos?usuarioId=1
+Accept: application/json
+
 ### Obtener producto por ID
 
 GET http://localhost:8080/api/productos/1
 Accept: application/json
 
-### Actualizar un producto
+### Actualizar un producto (requiere autenticacion y ser el vendedor)
 
 PUT http://localhost:8080/api/productos/1
 Content-Type: application/json
@@ -32,10 +43,11 @@ Content-Type: application/json
 {
   "nombre": "Notebook Dell XPS",
   "descripcion": "Notebook Dell XPS 13 pulgadas",
-  "precio": 1099999.99
+  "precio": 1099999.99,
+  "categoriaId": 1
 }
 
-### Eliminar un producto
+### Eliminar un producto (requiere autenticacion y ser el vendedor)
 
 DELETE http://localhost:8080/api/productos/1
 

@@ -26,4 +26,8 @@ public class ProductoException extends RuntimeException {
     public static ProductoException datosInvalidos(String mensaje) {
         return new ProductoException(mensaje, HttpStatus.BAD_REQUEST);
     }
+
+    public static ProductoException noPerteneceAlUsuario(Long id) {
+        return new ProductoException("El producto con ID " + id + " no pertenece al usuario", HttpStatus.FORBIDDEN);
+    }
 }

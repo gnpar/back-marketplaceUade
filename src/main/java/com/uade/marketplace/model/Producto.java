@@ -27,8 +27,8 @@ public class Producto {
     private Double precio;
     private Integer stock;
 
-    @ManyToOne
-    @JoinColumn(name = "usuario_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
     @ManyToOne

@@ -32,4 +32,9 @@ public class CarritoException extends RuntimeException {
                 HttpStatus.FORBIDDEN);
     }
 
+    public static CarritoException productoPropio(Long productoId) {
+        return new CarritoException("No podés comprar tu propio producto (ID " + productoId + ")",
+                HttpStatus.BAD_REQUEST);
+    }
+
 }
