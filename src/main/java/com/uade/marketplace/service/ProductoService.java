@@ -9,6 +9,7 @@ import com.uade.marketplace.model.Categoria;
 import com.uade.marketplace.model.Producto;
 import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.repository.CategoriaRepository;
+import com.uade.marketplace.repository.ImagenProductoRepository;
 import com.uade.marketplace.repository.ProductoRepository;
 import com.uade.marketplace.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
@@ -23,12 +24,14 @@ public class ProductoService {
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ImagenProductoRepository imagenProductoRepository;
 
     public ProductoService(ProductoRepository productoRepository, CategoriaRepository categoriaRepository,
-            UsuarioRepository usuarioRepository) {
+            UsuarioRepository usuarioRepository, ImagenProductoRepository imagenProductoRepository) {
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.imagenProductoRepository = imagenProductoRepository;
     }
 
     public List<ProductoResponseDTO> getProductos(Long categoriaId, Long usuarioId) {
@@ -92,6 +95,7 @@ public class ProductoService {
     public void eliminarProducto(Long id, Long usuarioId) {
         Producto producto = productoRepository.findById(id).orElseThrow(() -> ProductoException.noEncontrado(id));
         validarPropietario(producto, usuarioId);
+        imagenProductoRepository.deleteByProductoId(id);
         productoRepository.delete(producto);
     }
 
