@@ -8,6 +8,7 @@ import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.service.UsuarioService;
 import com.uade.marketplace.validation.OnCreate;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.groups.Default;
 import java.security.Principal;
 import java.util.List;
@@ -41,7 +42,8 @@ public class UsuarioController {
 
     // get http://localhost:8080/api/usuarios/1
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDTO> getUsuarioById(@PathVariable Long id) {
+    public ResponseEntity<UsuarioResponseDTO> getUsuarioById(
+            @PathVariable @Positive(message = "El identificador debe ser mayor a cero") Long id) {
         return ResponseEntity.ok(usuarioService.getUsuarioById(id));
     }
 
@@ -55,13 +57,14 @@ public class UsuarioController {
 
     // post http://localhost:8080/api/usuarios/login
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginDTO) {
+    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginDTO) {
         return ResponseEntity.ok(usuarioService.login(loginDTO));
     }
 
     // put http://localhost:8080/api/usuarios/1 (la propia cuenta, o un ADMIN)
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDTO> actualizarUsuario(@PathVariable Long id,
+    public ResponseEntity<UsuarioResponseDTO> actualizarUsuario(
+            @PathVariable @Positive(message = "El identificador debe ser mayor a cero") Long id,
             @Valid @RequestBody UsuarioRequestDTO usuarioDTO, Principal principal) {
         Usuario solicitante = usuarioService.obtenerAutenticado(principal);
         return ResponseEntity.ok(usuarioService.actualizarUsuario(id, usuarioDTO, solicitante));
@@ -69,7 +72,8 @@ public class UsuarioController {
 
     // delete http://localhost:8080/api/usuarios/1 (la propia cuenta, o un ADMIN)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id, Principal principal) {
+    public ResponseEntity<Void> eliminarUsuario(
+            @PathVariable @Positive(message = "El identificador debe ser mayor a cero") Long id, Principal principal) {
         Usuario solicitante = usuarioService.obtenerAutenticado(principal);
         usuarioService.eliminarUsuario(id, solicitante);
         return ResponseEntity.noContent().build();

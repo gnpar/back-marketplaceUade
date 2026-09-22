@@ -3,6 +3,8 @@ package com.uade.marketplace.controller;
 import com.uade.marketplace.dto.CategoriaRequestDTO;
 import com.uade.marketplace.dto.CategoriaResponseDTO;
 import com.uade.marketplace.service.CategoriaService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,27 +36,30 @@ public class CategoriaController {
 
     // get http://localhost:8080/api/categorias/1
     @GetMapping("/{id}")
-    public ResponseEntity<CategoriaResponseDTO> getCategoriaById(@PathVariable Long id) {
+    public ResponseEntity<CategoriaResponseDTO> getCategoriaById(
+            @PathVariable @Positive(message = "El identificador debe ser mayor a cero") Long id) {
         return ResponseEntity.ok(categoriaService.getCategoriaById(id));
     }
 
     // post http://localhost:8080/api/categorias
     @PostMapping()
-    public ResponseEntity<CategoriaResponseDTO> crearCategoria(@RequestBody CategoriaRequestDTO categoriaDTO) {
+    public ResponseEntity<CategoriaResponseDTO> crearCategoria(@Valid @RequestBody CategoriaRequestDTO categoriaDTO) {
         CategoriaResponseDTO creada = categoriaService.crearCategoria(categoriaDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(creada);
     }
 
     // put http://localhost:8080/api/categorias/1
     @PutMapping("/{id}")
-    public ResponseEntity<CategoriaResponseDTO> actualizarCategoria(@PathVariable Long id,
-            @RequestBody CategoriaRequestDTO categoriaDTO) {
+    public ResponseEntity<CategoriaResponseDTO> actualizarCategoria(
+            @PathVariable @Positive(message = "El identificador debe ser mayor a cero") Long id,
+            @Valid @RequestBody CategoriaRequestDTO categoriaDTO) {
         return ResponseEntity.ok(categoriaService.actualizarCategoria(id, categoriaDTO));
     }
 
     // delete http://localhost:8080/api/categorias/1
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarCategoria(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminarCategoria(
+            @PathVariable @Positive(message = "El identificador debe ser mayor a cero") Long id) {
         categoriaService.eliminarCategoria(id);
         return ResponseEntity.noContent().build();
     }
