@@ -85,6 +85,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(ex.getStatus()).body(error);
     }
 
+    @ExceptionHandler(ImagenProductoException.class)
+    public ResponseEntity<ErrorResponseDTO> handleImagenProductoException(ImagenProductoException ex) {
+        ErrorResponseDTO error = new ErrorResponseDTO(ex.getStatus().value(), ex.getMessage());
+        return ResponseEntity.status(ex.getStatus()).body(error);
+    }
+
     // Excepciones de Carrito
     @ExceptionHandler(CarritoException.class)
     public ResponseEntity<ErrorResponseDTO> handleCarritoException(CarritoException ex) {

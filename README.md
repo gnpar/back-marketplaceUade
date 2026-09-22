@@ -114,6 +114,19 @@ Base: `http://localhost:8080/api/productos`
 | PUT | `/api/productos/{id}` | Actualizar producto (404 si no existe; 403 si no lo creó el usuario autenticado) |
 | DELETE | `/api/productos/{id}` | Eliminar producto (204 si se elimina; 403 si no lo creó el usuario autenticado; 404 si no existe) |
 
+### Imágenes de productos
+
+Cada producto admite hasta 5 imágenes de 5 MB cada una. Se aceptan archivos JPEG, PNG y WebP; además del
+`Content-Type`, se valida la firma binaria para impedir que un archivo de otro tipo se presente como imagen. Las
+imágenes se almacenan en la base de datos y se eliminan junto con el producto.
+
+| Método | Ruta | Descripción |
+| --- | --- | --- |
+| POST | `/api/productos/{productoId}/imagenes` | Cargar una imagen como `multipart/form-data`, campo `archivo` (solo el vendedor) |
+| GET | `/api/productos/{productoId}/imagenes` | Listar metadatos y URL de las imágenes (público) |
+| GET | `/api/productos/{productoId}/imagenes/{imagenId}` | Consultar el archivo de imagen (público) |
+| DELETE | `/api/productos/{productoId}/imagenes/{imagenId}` | Eliminar una imagen (solo el vendedor) |
+
 ## Autenticación y permisos (JWT)
 
 La API es *stateless*: no hay sesión ni cookies. El login (`POST /api/usuarios/login`) devuelve un JWT y,
