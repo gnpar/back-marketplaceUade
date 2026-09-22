@@ -89,7 +89,7 @@ class UsuarioControllerIntegrationTest {
 
         mockMvc.perform(post("/api/usuarios/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"mail\":\"ana@test.com\",\"contrasena\":\"Clave1234\"}")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.mail").value("ana@test.com"));
+                .andExpect(jsonPath("$.usuario.mail").value("ana@test.com"));
     }
 
     @Test
@@ -181,7 +181,7 @@ class UsuarioControllerIntegrationTest {
 
         mockMvc.perform(post("/api/usuarios/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"mail\":\"juan@test.com\",\"contrasena\":\"clave123\"}")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.mail").value("juan@test.com"));
+                .andExpect(jsonPath("$.usuario.mail").value("juan@test.com"));
     }
 
     @Test
