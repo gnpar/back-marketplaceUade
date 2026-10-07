@@ -20,11 +20,13 @@ Al comprar se reduce el stock disponible; los productos sin stock se pausan: dej
 
 | Entidad | Atributos | Relaciones |
 | --- | --- | --- |
-| `Usuario` | nombreUsuario, mail, contraseña, nombre, apellido | 1:N con `Producto` |
-| `Producto` | nombre, descripcion, precio, stock, imagenes, estado (activo/pausado) | N:1 con `Usuario` (vendedor), N:M con `Categoria` |
-| `Categoria` | nombre | N:M con `Producto` (tabla `producto_categoria`) |
-| `Compra` | usuario comprador, fecha, estado (en curso/cerrada) | 1:N con items de compra |
-| `DetalleCompra` | producto, cantidad, precio unitario | N:1 con `Producto` y `Compra` |
+| `Usuario` | nombreUsuario, mail, contraseña, nombre, apellido, fechaNacimiento, sexo, rol | 1:N con `Producto` (vendedor), `Pedido` y `CarritoItem` |
+| `Categoria` | nombre | 1:N con `Producto` (cada producto tiene una sola categoría) |
+| `Producto` | nombre, descripcion, precio, stock | N:1 con `Usuario` (vendedor) y con `Categoria`; 1:N con `ImagenProducto` |
+| `ImagenProducto` | nombreArchivo, tipoContenido, tamanio, datos | N:1 con `Producto` |
+| `CarritoItem` | cantidad | N:1 con `Usuario` y con `Producto` |
+| `Pedido` | fecha, total | N:1 con `Usuario` (comprador); 1:N con `PedidoItem` (cascade) |
+| `PedidoItem` | cantidad, precioUnitario | N:1 con `Pedido` y con `Producto` |
 
 ## Entorno de desarrollo
 
