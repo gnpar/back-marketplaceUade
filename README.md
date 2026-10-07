@@ -12,7 +12,7 @@ Al comprar se reduce el stock disponible; los productos sin stock se pausan: dej
 - **Arquitectura en capas** (`com.uade.marketplace`):
   - `controller` — `@RestController`
   - `service` — `@Service` + `@Transactional` (lógica de negocio)
-  - `repository` — `@Repository` extendiendo `JpaRepository` (acceso a datos)
+  - `repository` — interfaces que extienden `JpaRepository` (acceso a datos)
   - `model` — entidades JPA (`@Entity`, `@Id`, `@GeneratedValue`, `@Column`, relaciones)
   - `dto` — `DTOs` para desacoplar las entidades de controller y service
 
