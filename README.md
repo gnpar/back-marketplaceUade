@@ -25,6 +25,7 @@ Al comprar se reduce el stock disponible; los productos sin stock se pausan: dej
 | `Producto` | nombre, descripcion, precio, stock | N:1 con `Usuario` (vendedor) y con `Categoria`; 1:N con `ImagenProducto` |
 | `ImagenProducto` | nombreArchivo, tipoContenido, tamanio, datos | N:1 con `Producto` |
 | `CarritoItem` | cantidad | N:1 con `Usuario` y con `Producto` |
+| `Favorito` | — | N:1 con `Usuario` y con `Producto` (un producto por usuario) |
 | `Pedido` | fecha, total | N:1 con `Usuario` (comprador); 1:N con `PedidoItem` (cascade) |
 | `PedidoItem` | cantidad, precioUnitario | N:1 con `Pedido` y con `Producto` |
 
@@ -129,6 +130,17 @@ imágenes se almacenan en la base de datos y se eliminan junto con el producto.
 | GET | `/api/productos/{productoId}/imagenes/{imagenId}` | Consultar el archivo de imagen (público) |
 | DELETE | `/api/productos/{productoId}/imagenes/{imagenId}` | Eliminar una imagen (solo el vendedor) |
 
+### Favoritos
+
+Cada usuario guarda sus propios productos favoritos. Un producto no se repite para el mismo usuario y las
+operaciones son idempotentes: agregar dos veces no duplica y quitar algo que no estaba responde 204.
+
+| Método | Ruta | Descripción |
+| --- | --- | --- |
+| GET | `/api/favoritos` | Listar los productos favoritos del usuario autenticado |
+| POST | `/api/favoritos/{productoId}` | Agregar un producto a favoritos (404 si el producto no existe) |
+| DELETE | `/api/favoritos/{productoId}` | Quitar un producto de favoritos |
+
 ## Autenticación y permisos (JWT)
 
 La API es *stateless*: no hay sesión ni cookies. El login (`POST /api/usuarios/login`) devuelve un JWT y,
@@ -162,6 +174,7 @@ En los controllers el usuario autenticado se resuelve desde el `Principal`, cuyo
 | `GET /api/productos/**`, `GET /api/categorias/**` | Público (catálogo) |
 | `POST/PUT/DELETE /api/productos/**` | Autenticado (y ser el vendedor para editar/borrar) |
 | `/api/carrito/**` | Autenticado |
+| `/api/favoritos/**` | Autenticado (cada usuario ve y edita solo los suyos) |
 | `GET /api/usuarios/{id}` | Autenticado |
 | `PUT/DELETE /api/usuarios/{id}` | La propia cuenta, o rol `ADMIN` |
 | `GET /api/usuarios` (listado completo) | Rol `ADMIN` |
