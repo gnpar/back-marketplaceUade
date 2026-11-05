@@ -9,6 +9,7 @@ import com.uade.marketplace.model.Categoria;
 import com.uade.marketplace.model.Producto;
 import com.uade.marketplace.model.Usuario;
 import com.uade.marketplace.repository.CategoriaRepository;
+import com.uade.marketplace.repository.FavoritoRepository;
 import com.uade.marketplace.repository.ImagenProductoRepository;
 import com.uade.marketplace.repository.ProductoRepository;
 import com.uade.marketplace.repository.UsuarioRepository;
@@ -25,13 +26,16 @@ public class ProductoService {
     private final CategoriaRepository categoriaRepository;
     private final UsuarioRepository usuarioRepository;
     private final ImagenProductoRepository imagenProductoRepository;
+    private final FavoritoRepository favoritoRepository;
 
     public ProductoService(ProductoRepository productoRepository, CategoriaRepository categoriaRepository,
-            UsuarioRepository usuarioRepository, ImagenProductoRepository imagenProductoRepository) {
+            UsuarioRepository usuarioRepository, ImagenProductoRepository imagenProductoRepository,
+            FavoritoRepository favoritoRepository) {
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
         this.usuarioRepository = usuarioRepository;
         this.imagenProductoRepository = imagenProductoRepository;
+        this.favoritoRepository = favoritoRepository;
     }
 
     public List<ProductoResponseDTO> getProductos(Long categoriaId, Long usuarioId) {
@@ -96,6 +100,8 @@ public class ProductoService {
         Producto producto = productoRepository.findById(id).orElseThrow(() -> ProductoException.noEncontrado(id));
         validarPropietario(producto, usuarioId);
         imagenProductoRepository.deleteByProductoId(id);
+        // Los favoritos apuntan al producto: se borran antes para no romper la FK.
+        favoritoRepository.deleteByProductoId(id);
         productoRepository.delete(producto);
     }
 
