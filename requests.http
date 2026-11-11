@@ -89,6 +89,22 @@ GET http://localhost:8080/api/carrito
 Accept: application/json
 Authorization: Bearer {{token}}
 
+### Ver los favoritos del usuario (requiere autenticacion)
+
+GET http://localhost:8080/api/favoritos
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### Agregar un producto a favoritos (requiere autenticacion)
+
+POST http://localhost:8080/api/favoritos/1
+Authorization: Bearer {{token}}
+
+### Quitar un producto de favoritos (requiere autenticacion)
+
+DELETE http://localhost:8080/api/favoritos/1
+Authorization: Bearer {{token}}
+
 ### Crear una categoria (requiere rol ADMIN)
 # Para probarlo hay que promover al usuario en la base:
 #   UPDATE usuarios SET rol = 'ADMIN' WHERE mail = 'ana@test.com';

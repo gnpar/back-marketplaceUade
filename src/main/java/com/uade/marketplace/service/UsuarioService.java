@@ -7,6 +7,7 @@ import com.uade.marketplace.dto.UsuarioResponseDTO;
 import com.uade.marketplace.exception.UsuarioException;
 import com.uade.marketplace.model.Rol;
 import com.uade.marketplace.model.Usuario;
+import com.uade.marketplace.repository.FavoritoRepository;
 import com.uade.marketplace.repository.UsuarioRepository;
 import com.uade.marketplace.security.JwtService;
 import jakarta.transaction.Transactional;
@@ -23,11 +24,14 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final FavoritoRepository favoritoRepository;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtService jwtService,
+            FavoritoRepository favoritoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.favoritoRepository = favoritoRepository;
     }
 
     public List<UsuarioResponseDTO> getAllUsuarios() {
@@ -106,6 +110,8 @@ public class UsuarioService {
         if (!usuarioRepository.existsById(id)) {
             throw UsuarioException.noEncontrado(id);
         }
+        // Los favoritos apuntan al usuario: se borran antes para no romper la FK.
+        favoritoRepository.deleteByUsuarioId(id);
         usuarioRepository.deleteById(id);
     }
 
