@@ -8,12 +8,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Data
 @NoArgsConstructor
@@ -35,9 +36,11 @@ public class ImagenProducto {
     @Column(nullable = false)
     private Long tamanio;
 
-    @Lob
+    // LONG32VARBINARY + capacidad máxima evita el TINYBLOB que Hibernate elige
+    // con la capacidad por defecto de 255: en MySQL genera LONGBLOB (y BLOB en H2).
+    @JdbcTypeCode(SqlTypes.LONG32VARBINARY)
     @Basic(fetch = FetchType.LAZY)
-    @Column(nullable = false)
+    @Column(nullable = false, length = Integer.MAX_VALUE)
     private byte[] datos;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
