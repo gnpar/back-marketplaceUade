@@ -169,6 +169,41 @@ class CarritoControllerIntegrationTest {
     }
 
     @Test
+    void obtenerItemExistente() throws Exception {
+        mockMvc.perform(post("/api/carrito").header(HttpHeaders.AUTHORIZATION, bearer(comprador))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":2}")).andExpect(status().isCreated());
+
+        Long itemId = carritoItemRepository.findByUsuarioId(comprador.getId()).get(0).getId();
+
+        mockMvc.perform(get("/api/carrito/items/{itemId}", itemId).header(HttpHeaders.AUTHORIZATION, bearer(comprador)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(itemId))
+                .andExpect(jsonPath("$.productoId").value(producto.getId()))
+                .andExpect(jsonPath("$.nombreProducto").value("Mouse")).andExpect(jsonPath("$.cantidad").value(2));
+    }
+
+    @Test
+    void obtenerItemInexistenteDevuelve404() throws Exception {
+        mockMvc.perform(get("/api/carrito/items/{itemId}", 999L).header(HttpHeaders.AUTHORIZATION, bearer(comprador)))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.mensaje").value("Item del carrito con ID 999 no encontrado"));
+    }
+
+    @Test
+    void obtenerItemDeOtroUsuarioDevuelve403() throws Exception {
+        Usuario otro = crearUsuarioEnBD("otrousuario", "otro@test.com");
+
+        mockMvc.perform(post("/api/carrito").header(HttpHeaders.AUTHORIZATION, bearer(comprador))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"productoId\":" + producto.getId() + ",\"cantidad\":1}")).andExpect(status().isCreated());
+
+        Long itemId = carritoItemRepository.findByUsuarioId(comprador.getId()).get(0).getId();
+
+        mockMvc.perform(get("/api/carrito/items/{itemId}", itemId).header(HttpHeaders.AUTHORIZATION, bearer(otro)))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
     void quitarItemExistente() throws Exception {
         mockMvc.perform(post("/api/carrito").header(HttpHeaders.AUTHORIZATION, bearer(comprador))
                 .contentType(MediaType.APPLICATION_JSON)

@@ -89,6 +89,12 @@ GET http://localhost:8080/api/carrito
 Accept: application/json
 Authorization: Bearer {{token}}
 
+### Ver un item del carrito por id (requiere autenticacion y que el item sea del usuario)
+
+GET http://localhost:8080/api/carrito/items/1
+Accept: application/json
+Authorization: Bearer {{token}}
+
 ### Ver los favoritos del usuario (requiere autenticacion)
 
 GET http://localhost:8080/api/favoritos
