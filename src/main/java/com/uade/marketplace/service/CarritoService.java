@@ -48,6 +48,15 @@ public class CarritoService {
         return dtos;
     }
 
+    public CarritoItemResponseDTO getItem(Long usuarioId, Long itemId) {
+        CarritoItem item = carritoItemRepository.findById(itemId)
+                .orElseThrow(() -> CarritoException.noEncontrado(itemId));
+        if (!item.getUsuario().getId().equals(usuarioId)) {
+            throw CarritoException.noPerteneceAlUsuario(itemId);
+        }
+        return convertirADTO(item);
+    }
+
     public CarritoItemResponseDTO agregarItem(CarritoItemRequestDTO itemDTO, Long usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> UsuarioException.noEncontrado(usuarioId));

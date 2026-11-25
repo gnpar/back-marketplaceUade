@@ -38,6 +38,14 @@ public class CarritoController {
         return ResponseEntity.ok(carritoService.getCarrito(usuarioId(principal)));
     }
 
+    // get http://localhost:8080/api/carrito/items/5
+    @GetMapping("/items/{itemId}")
+    public ResponseEntity<CarritoItemResponseDTO> getItem(
+            @PathVariable @Positive(message = "El identificador debe ser mayor a cero") Long itemId,
+            Principal principal) {
+        return ResponseEntity.ok(carritoService.getItem(usuarioId(principal), itemId));
+    }
+
     // post http://localhost:8080/api/carrito
     @PostMapping()
     public ResponseEntity<CarritoItemResponseDTO> agregarItem(@Valid @RequestBody CarritoItemRequestDTO itemDTO,
