@@ -29,6 +29,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<app.profiles>mysql</app.profiles>
+		<gitbuildhook.install.skip>false</gitbuildhook.install.skip>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -195,6 +196,7 @@
 				<artifactId>git-build-hook-maven-plugin</artifactId>
 				<version>3.6.0</version>
 				<configuration>
+					<skip>${gitbuildhook.install.skip}</skip>
 					<installHooks>
 						<pre-commit>hooks/pre-commit</pre-commit>
 					</installHooks>
@@ -210,5 +212,21 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<!--
+			Perfil usado por el builder de Railway (Railpack ejecuta el build con
+			-Pproduction). Sin .git en el contexto de build, el plugin de hooks
+			local fallaria, asi que se desactiva. Tambien deja el perfil de Spring
+			"production" por defecto al correr con spring-boot:run.
+		-->
+		<profile>
+			<id>production</id>
+			<properties>
+				<app.profiles>production</app.profiles>
+				<gitbuildhook.install.skip>true</gitbuildhook.install.skip>
+			</properties>
+		</profile>
+	</profiles>
 
 </project>
