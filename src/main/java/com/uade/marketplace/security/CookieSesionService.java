@@ -22,7 +22,8 @@ import org.springframework.stereotype.Component;
  * {@code localhost} por HTTP). Se desactiva con
  * {@code AUTH_COOKIE_SECURE=false} si hace falta.</li>
  * <li>{@code SameSite=Strict}: el navegador no la manda en requests que se
- * originan en otro sitio; es la barrera contra CSRF.</li>
+ * originan en otro sitio; es la primera barrera contra CSRF (la segunda es el
+ * token CSRF de {@code SecurityConfig}).</li>
  * <li>{@code Path=/api}: no se manda al pedir el HTML, JS o imagenes.</li>
  * <li>{@code Max-Age}: igual al vencimiento del JWT (24 h), asi la sesion
  * sobrevive a un F5 o a cerrar el navegador.</li>
@@ -63,6 +64,11 @@ public class CookieSesionService {
             }
         }
         return null;
+    }
+
+    /** True si la request trae la cookie de sesion (la usa el filtro de CSRF). */
+    public boolean tieneCookieSesion(HttpServletRequest request) {
+        return leerToken(request) != null;
     }
 
     private ResponseCookie.ResponseCookieBuilder base(String valor) {
