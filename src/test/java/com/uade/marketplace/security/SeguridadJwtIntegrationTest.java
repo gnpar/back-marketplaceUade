@@ -1,5 +1,6 @@
 package com.uade.marketplace.security;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -12,6 +13,7 @@ import com.uade.marketplace.repository.UsuarioRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
 import java.time.LocalDate;
 import java.util.Date;
 import org.junit.jupiter.api.BeforeEach;
@@ -130,7 +132,7 @@ class SeguridadJwtIntegrationTest {
                 .andExpect(jsonPath("$.status").value(401));
     }
 
-    // Registro -> login -> uso del token devuelto en una ruta protegida.
+    // Registro -> login -> uso del token de la cookie en una ruta protegida.
     @Test
     void elTokenQueDevuelveElLoginSirveParaLasRutasProtegidas() throws Exception {
         mockMvc.perform(post("/api/usuarios/registro").contentType(MediaType.APPLICATION_JSON).content("""
@@ -139,14 +141,13 @@ class SeguridadJwtIntegrationTest {
                  "fechaNacimiento":"1998-03-15","sexo":"FEMENINO"}
                 """)).andExpect(status().isCreated()).andExpect(jsonPath("$.rol").value("USUARIO"));
 
-        String respuesta = mockMvc
+        Cookie cookieSesion = mockMvc
                 .perform(post("/api/usuarios/login").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"mail\":\"ana@test.com\",\"contrasena\":\"Clave1234\"}"))
-                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+                .andExpect(status().isOk()).andReturn().getResponse().getCookie(CookieSesionService.NOMBRE_COOKIE);
 
-        String token = respuesta.replaceAll(".*\"token\"\\s*:\\s*\"([^\"]+)\".*", "$1");
-
-        mockMvc.perform(get("/api/carrito").header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        assertNotNull(cookieSesion);
+        mockMvc.perform(get("/api/carrito").header(HttpHeaders.AUTHORIZATION, "Bearer " + cookieSesion.getValue())
                 .accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
     }
 

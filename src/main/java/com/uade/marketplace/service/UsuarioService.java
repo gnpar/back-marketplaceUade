@@ -1,7 +1,6 @@
 package com.uade.marketplace.service;
 
 import com.uade.marketplace.dto.LoginRequestDTO;
-import com.uade.marketplace.dto.LoginResponseDTO;
 import com.uade.marketplace.dto.UsuarioRequestDTO;
 import com.uade.marketplace.dto.UsuarioResponseDTO;
 import com.uade.marketplace.exception.UsuarioException;
@@ -67,13 +66,25 @@ public class UsuarioService {
         return convertirADTO(guardado);
     }
 
-    public LoginResponseDTO login(LoginRequestDTO loginDTO) {
+    /**
+     * Resultado del login para el controller: el usuario va al body y el token a la
+     * cookie HttpOnly. El token nunca se serializa en la respuesta.
+     */
+    public record SesionIniciada(UsuarioResponseDTO usuario, String token) {
+    }
+
+    public SesionIniciada login(LoginRequestDTO loginDTO) {
         Usuario usuario = usuarioRepository.findByMail(loginDTO.getMail()).orElse(null);
         if (usuario == null || !passwordEncoder.matches(loginDTO.getContrasena(), usuario.getContrasena())) {
             throw UsuarioException.credencialesIncorrectas();
         }
         String token = jwtService.generarToken(usuario.getMail());
-        return new LoginResponseDTO(convertirADTO(usuario), token);
+        return new SesionIniciada(convertirADTO(usuario), token);
+    }
+
+    /** Datos del usuario de la sesion actual (GET /api/usuarios/me). */
+    public UsuarioResponseDTO getUsuarioAutenticado(Principal principal) {
+        return convertirADTO(obtenerAutenticado(principal));
     }
 
     public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO usuarioDTO, Usuario solicitante) {
