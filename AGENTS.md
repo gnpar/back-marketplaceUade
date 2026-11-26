@@ -45,7 +45,10 @@ El nombre del paquete es `com.uade.marketplace`.
 
 ## Seguridad
 
-API stateless autenticada con JWT (`Authorization: Bearer <token>`), sin sesión ni CSRF. `JwtAuthenticationFilter`
+API stateless autenticada con JWT, sin sesión en el servidor. El login pone el token en una cookie `HttpOnly`
+(`CookieSesionService`); también se acepta `Authorization: Bearer <token>` (tests, Postman). Las requests que
+modifican datos autenticadas con la cookie exigen el token CSRF (`XSRF-TOKEN` / `X-XSRF-TOKEN`, ver
+`SecurityConfig`). `JwtAuthenticationFilter`
 valida el token con `JwtService`, carga el usuario con `UsuarioDetailsService` y lo deja en el `SecurityContext`;
 `SecurityConfig` define los permisos por ruta y los roles (`Usuario.rol`: `USUARIO` / `ADMIN` → `ROLE_*`). El
 detalle de qué ruta pide qué está en el README.

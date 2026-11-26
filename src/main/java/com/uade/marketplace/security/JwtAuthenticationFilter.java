@@ -74,7 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return cookieSesionService.leerToken(request);
         }
         // Si vino el header, manda el header (aunque este mal): nunca se mezcla con
-        // la cookie.
+        // la cookie, asi la regla de CSRF de SecurityConfig no tiene huecos.
         if (!header.startsWith(PREFIJO_BEARER)) {
             return null;
         }
