@@ -86,7 +86,7 @@ Los tests corren sobre H2 (perfil `h2`, activado por el build), no requieren MyS
 ### Gestión de usuarios
 
 - **Registro**: solicita nombre de usuario, mail, contraseña, nombre y apellido.
-- **Login**: identifica al usuario mediante mail y contraseña y devuelve un JWT con vencimiento, que el cliente manda en el header `Authorization` de las rutas protegidas (ver [Autenticación y permisos](#autenticación-y-permisos-jwt)).
+- **Login**: identifica al usuario mediante mail y contraseña y emite un JWT con vencimiento. El navegador lo recibe en una cookie `HttpOnly` (que JavaScript no puede leer); otros clientes pueden mandarlo en el header `Authorization` (ver [Autenticación y permisos](#autenticación-y-permisos-jwt)).
 
 ### Catálogo de productos
 
@@ -143,12 +143,29 @@ operaciones son idempotentes: agregar dos veces no duplica y quitar algo que no 
 
 ## Autenticación y permisos (JWT)
 
-La API es *stateless*: no hay sesión ni cookies. El login (`POST /api/usuarios/login`) devuelve un JWT y,
-a partir de ahí, cada request lo manda en el header:
+La API es *stateless*: no hay sesión en el servidor. El login (`POST /api/usuarios/login`) emite un JWT y lo
+devuelve en la cookie de sesión, **no en el body**:
+
+```
+Set-Cookie: marketplace_token=<jwt>; Path=/api; Max-Age=86400; Secure; HttpOnly; SameSite=Strict
+```
+
+El navegador la manda sola en cada request a `/api`, así que el front nunca ve ni guarda el token. Para Postman,
+`requests.http` y los tests, el token también se acepta en el header (si viene el header, la cookie se ignora):
 
 ```
 Authorization: Bearer <token>
 ```
+
+| Endpoint | Para qué |
+| --- | --- |
+| `POST /api/usuarios/login` | Pone la cookie y devuelve `{ usuario }` |
+| `GET /api/usuarios/me` | Usuario de la sesión actual: el front lo pide al abrir la app o al apretar F5 (401 si no hay sesión) |
+| `POST /api/usuarios/logout` | Borra la cookie (204). Público: funciona aunque el token haya vencido |
+
+**Atributos de la cookie** (`CookieSesionService`): `HttpOnly` (un XSS no puede leer el token), `Secure` (solo
+HTTPS; los navegadores aceptan `localhost`; se desactiva con `AUTH_COOKIE_SECURE=false`), `SameSite=Strict` (no
+viaja en requests iniciadas desde otro sitio), `Path=/api` y `Max-Age` igual al vencimiento del JWT.
 
 **Contrato del token**: firmado con HS256 y la clave `jwt.secret`, `sub` = mail del usuario, `exp` = emisión +
 `jwt.expiration` ms (24 hs por defecto). El rol **no** viaja en el token: se lee de la base de datos al
@@ -156,7 +173,7 @@ validarlo, así un cambio de rol tiene efecto sin esperar a que el token venza.
 
 **Cómo se valida** (`com.uade.marketplace.security`):
 
-1. `JwtAuthenticationFilter` (un `OncePerRequestFilter`) lee el header, valida firma y vencimiento con
+1. `JwtAuthenticationFilter` (un `OncePerRequestFilter`) lee el header o, si no hay header, la cookie, valida firma y vencimiento con
    `JwtService` y, si está todo bien, carga al usuario con `UsuarioDetailsService` (`UserDetailsService`) y lo
    deja autenticado en el `SecurityContext` de esa request.
 2. Si no hay token, está vencido, la firma no verifica o el usuario ya no existe, la request sigue anónima: el
@@ -170,7 +187,8 @@ En los controllers el usuario autenticado se resuelve desde el `Principal`, cuyo
 
 | Ruta | Permiso |
 | --- | --- |
-| `POST /api/usuarios/registro`, `POST /api/usuarios/login` | Público |
+| `POST /api/usuarios/registro`, `POST /api/usuarios/login`, `POST /api/usuarios/logout` | Público |
+| `GET /api/usuarios/me` | Autenticado |
 | `GET /api/productos/**`, `GET /api/categorias/**` | Público (catálogo) |
 | `POST/PUT/DELETE /api/productos/**` | Autenticado (y ser el vendedor para editar/borrar) |
 | `/api/carrito/**` | Autenticado |

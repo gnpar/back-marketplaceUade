@@ -16,10 +16,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * Configuracion de Spring Security: API stateless autenticada por JWT.
  *
  * <p>
- * No hay sesion ni login por formulario: cada request se autentica con el
- * header {@code Authorization: Bearer <token>} que valida
- * {@link JwtAuthenticationFilter}. Por eso tambien se desactiva CSRF, que
- * protege flujos con cookies de sesion.
+ * No hay sesion en el servidor ni login por formulario: cada request se
+ * autentica con un JWT que valida {@link JwtAuthenticationFilter}, en el header
+ * {@code Authorization: Bearer <token>} o en la cookie HttpOnly
+ * {@code marketplace_token} que pone el login. CSRF sigue desactivado: la
+ * cookie es {@code SameSite=Strict}, asi que el navegador no la manda desde
+ * otro sitio.
  * </p>
  *
  * <p>
@@ -49,10 +51,11 @@ public class SecurityConfig {
                 // La consola de H2 se dibuja dentro de un frame del mismo origen.
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
-                        // Publico: registro, login y catalogo de solo lectura.
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/registro", "/api/usuarios/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/productos/**", "/api/categorias/**").permitAll()
-                        .requestMatchers("/error", "/actuator/**", "/h2-console/**").permitAll()
+                        // Publico: registro, login, logout y catalogo de solo lectura.
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios/registro", "/api/usuarios/login",
+                                "/api/usuarios/logout")
+                        .permitAll().requestMatchers(HttpMethod.GET, "/api/productos/**", "/api/categorias/**")
+                        .permitAll().requestMatchers("/error", "/actuator/**", "/h2-console/**").permitAll()
                         // Solo ADMIN: gestion del catalogo de categorias y listado
                         // completo de usuarios.
                         .requestMatchers("/api/categorias/**").hasRole("ADMIN")

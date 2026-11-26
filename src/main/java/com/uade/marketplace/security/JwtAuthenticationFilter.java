@@ -17,9 +17,18 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * Valida el JWT que llega en {@code Authorization: Bearer <token>} y, si es
- * valido, deja autenticado al usuario en el {@code SecurityContext} durante esa
- * request.
+ * Valida el JWT de la request y, si es valido, deja autenticado al usuario en
+ * el {@code SecurityContext} durante esa request.
+ *
+ * <p>
+ * El token se busca en dos lugares, en este orden:
+ * </p>
+ * <ol>
+ * <li>El header {@code Authorization: Bearer <token>}: lo usan los tests,
+ * Postman y {@code requests.http}.</li>
+ * <li>La cookie HttpOnly {@code marketplace_token} que pone el login: la usa el
+ * front, que nunca ve el token (ver {@link CookieSesionService}).</li>
+ * </ol>
  *
  * <p>
  * El filtro nunca responde un error: si no hay token, esta vencido, la firma no
@@ -34,10 +43,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final CookieSesionService cookieSesionService;
 
-    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService,
+            CookieSesionService cookieSesionService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.cookieSesionService = cookieSesionService;
     }
 
     @Override
@@ -58,7 +70,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String extraerToken(HttpServletRequest request) {
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (header == null || !header.startsWith(PREFIJO_BEARER)) {
+        if (header == null) {
+            return cookieSesionService.leerToken(request);
+        }
+        // Si vino el header, manda el header (aunque este mal): nunca se mezcla con
+        // la cookie.
+        if (!header.startsWith(PREFIJO_BEARER)) {
             return null;
         }
         String token = header.substring(PREFIJO_BEARER.length()).trim();

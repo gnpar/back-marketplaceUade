@@ -2,9 +2,11 @@
 # Archivo de referencia de solicitudes al servicio desarrollado.
 # Para pruebas rápidas
 #
-# Las rutas protegidas piden el JWT en el header Authorization. Ejecutar primero
-# "Registro" y "Login": el login guarda el token en la variable {{token}} y el
-# resto de las llamadas lo reutilizan.
+# Las rutas protegidas piden el JWT. El login lo devuelve en la cookie HttpOnly
+# marketplace_token (no en el body). Ejecutar primero "Registro" y "Login": el
+# script del login saca el token del header Set-Cookie, lo guarda en {{token}} y
+# el resto de las llamadas lo mandan en el header Authorization (las requests con
+# ese header no necesitan el token CSRF).
 #
 
 ### Registro de un usuario
@@ -33,9 +35,21 @@ Content-Type: application/json
 }
 
 > {%
-  client.global.set("token", response.body.token);
-  client.log(`token: ${response.body.token}`);
+  const cookies = response.headers.valuesOf("Set-Cookie");
+  const sesion = cookies.find((cookie) => cookie.startsWith("marketplace_token="));
+  const token = sesion.split(";")[0].substring("marketplace_token=".length);
+  client.global.set("token", token);
+  client.log(`token: ${token}`);
 %}
+
+### Usuario de la sesion actual (lo usa el front al apretar F5)
+
+GET http://localhost:8080/api/usuarios/me
+Authorization: Bearer {{token}}
+
+### Logout (borra la cookie de sesion)
+
+POST http://localhost:8080/api/usuarios/logout
 
 ### Crear un producto (requiere autenticacion)
 
